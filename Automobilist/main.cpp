@@ -4,21 +4,22 @@
 
 int main() {
 	sf::RenderWindow window(sf::VideoMode(width, height), "Automobilist");
-
+	window.setFramerateLimit(60);
 	Game game(&window);
 
 	while (window.isOpen()) {
 
+		window.clear(background);
+
 		sf::Event event;
 		while (window.pollEvent(event)) {
-			window.clear(sf::Color::White);
 			if (event.type == sf::Event::Closed) {
 				window.close();
 			}
-			game.render(event);
-			window.display();
 		}
 
+		game.render(event);
+		window.display();
 	}
 
 	return 0;

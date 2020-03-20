@@ -10,6 +10,7 @@
 
 class Game {
 	sf::RenderWindow* window;
+	sf::Font main_font;
 
 	// Cooridinates of segment bottom line center
 	std::vector<Segment> segments;
@@ -19,6 +20,7 @@ class Game {
 	float speed = 0;
 
 	void process_keypress();
+	void render_info();
 public:
 	Game(sf::RenderWindow* w);
 	void render(sf::Event event);
