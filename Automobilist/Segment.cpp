@@ -1,5 +1,15 @@
 #include "Segment.h"
 
+Segment::Segment() {
+	world_top = sf::Vector3f(0, 0, 0);
+	world_bottom = sf::Vector3f(0, 0, 0);
+	screen_top = sf::Vector3f(0, 0, 0);
+	screen_bottom = sf::Vector3f(0, 0, 0);
+
+	curve = 0;
+	scale = 0;
+}
+
 void Segment::project(sf::Vector3f& camera) {
 	scale = camera_depth / (world_top.z - camera.z);
 	screen_top.x = (1 + scale * (world_top.x - camera.x)) * width / 2;

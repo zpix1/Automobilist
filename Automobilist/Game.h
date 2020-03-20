@@ -17,7 +17,7 @@ class Game {
 	
 	float playerX = 0;
 	float position = 0;
-	float speed = 0;
+	float speed = 300;
 
 	void process_keypress();
 	void render_info();

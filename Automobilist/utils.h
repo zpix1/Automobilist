@@ -16,7 +16,7 @@ const sf::Color rumble1_color = sf::Color(255, 255, 255);
 const sf::Color rumble2_color = sf::Color(0, 0, 0);
 
 const sf::Color grass1_color = sf::Color(16, 200, 16);
-const sf::Color grass2_color = sf::Color(16, 200, 16);
+const sf::Color grass2_color = sf::Color(0, 154, 0);
 
 const float road_width = 2000.0;
 const float segment_length = 200.0;
@@ -26,12 +26,12 @@ const float FOV = 100.0;
 const int lanes_n = 3;
 const float camera_height = 1000.0;
 const int draw_distance = 300;
-const float camera_depth = 0.84;
+const float camera_depth = 1;
 
 const float x_speed = 200;
 const float fogDensity = 5;
 const float max_speed = 300;
-const float accel = 2;
+const float accel = 5;
 const float breaking = -max_speed;
 const float decel = 0.5;
 const float off_road_decel = -max_speed / 2;

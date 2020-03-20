@@ -16,6 +16,12 @@ Game::Game(sf::RenderWindow* w) {
 		segment.world_top.z = (i + 1) * segment_length;
 		segment.world_bottom.z = i * segment_length;
 
+		//segment.curve = (i > 300 && i < 700) ? 0.5 : 0;
+		if (i > 100) {
+			segment.world_top.y = sin((i + 1) / 30.0) * 1500;
+			segment.world_bottom.y = sin(i / 30.0) * 1500;
+		}
+
 		segments.push_back(segment);
 	}
 
@@ -62,11 +68,20 @@ void Game::render(sf::Event event) {
 	process_keypress();
 	render_info();
 	int start_segment_i = position / segment_length;
-
-	for (int i = start_segment_i+1; i < start_segment_i + draw_distance; i++) {
+	float camera_height = 1500 + segments[(start_segment_i) % segments_buffer_size].world_bottom.y;
+	float x = 0;
+	float dx = 0;
+	int maxy = height;
+	for (int i = start_segment_i; i < start_segment_i + draw_distance; i++) {
 		Segment& s = segments[i % segments_buffer_size];
-		sf::Vector3f camera(playerX, 1500, position);
+		sf::Vector3f camera(playerX - x, camera_height, position);
 		s.project(camera);
+
+		x += dx;
+		dx += s.curve;
+
+		if (s.screen_bottom.y >= maxy) continue;
+		maxy = s.screen_bottom.y;
 
 		// Grass
 		draw_quad(*window, sf::Vector3f(0, s.screen_top.y, width), sf::Vector3f(0, s.screen_bottom.y, width), (i / 3) % 2 ? grass1_color : grass2_color);
