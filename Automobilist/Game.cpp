@@ -13,13 +13,11 @@ Game::Game(sf::RenderWindow* w) {
 	for (int i = 0; i < segments_buffer_size; i++) {
 		Segment segment;
 
-		segment.world_top.z = (i + 1) * segment_length;
-		segment.world_bottom.z = i * segment_length;
+		segment.world.z = i * segment_length;
 
-		//segment.curve = (i > 300 && i < 700) ? 0.5 : 0;
+		segment.curve = (i > 300 && i < 700) ? 0.5 : 0;
 		if (i > 100) {
-			segment.world_top.y = sin((i + 1) / 30.0) * 1500;
-			segment.world_bottom.y = sin(i / 30.0) * 1500;
+			segment.world.y = sin((i) / 30.0) * 1500;
 		}
 
 		segments.push_back(segment);
@@ -67,11 +65,11 @@ void Game::process_keypress() {
 void Game::render(sf::Event event) {
 	process_keypress();
 	render_info();
-	int start_segment_i = position / segment_length;
-	float camera_height = 1500 + segments[(start_segment_i) % segments_buffer_size].world_bottom.y;
+	int start_segment_i = ceil(position / segment_length);
+	float camera_height = 1500 + segments[(start_segment_i) % segments_buffer_size].world.y;
 	float x = 0;
 	float dx = 0;
-	int maxy = height;
+	float maxy = height;
 	for (int i = start_segment_i; i < start_segment_i + draw_distance; i++) {
 		Segment& s = segments[i % segments_buffer_size];
 		sf::Vector3f camera(playerX - x, camera_height, position);
@@ -79,17 +77,18 @@ void Game::render(sf::Event event) {
 
 		x += dx;
 		dx += s.curve;
+		if (s.screen.y >= maxy) continue;
+		maxy = s.screen.y;
+		if (i < 1) continue;
 
-		if (s.screen_bottom.y >= maxy) continue;
-		maxy = s.screen_bottom.y;
-
+		Segment old = segments[(i - 1) % segments_buffer_size];
 		// Grass
-		draw_quad(*window, sf::Vector3f(0, s.screen_top.y, width), sf::Vector3f(0, s.screen_bottom.y, width), (i / 3) % 2 ? grass1_color : grass2_color);
+		draw_quad(*window, sf::Vector3f(0, s.screen.y, width), sf::Vector3f(0, old.screen.y, width), (i / 3) % 2 ? grass1_color : grass2_color);
 
 		// Rumble
-		draw_quad(*window, sf::Vector3f(s.screen_top.x, s.screen_top.y, s.screen_top.z * rumble_width_k), sf::Vector3f(s.screen_bottom.x, s.screen_bottom.y, s.screen_bottom.z * rumble_width_k), (i / 3) % 2 ? rumble1_color : rumble2_color);
+		draw_quad(*window, sf::Vector3f(s.screen.x, s.screen.y, s.screen.z * rumble_width_k), sf::Vector3f(old.screen.x, old.screen.y, old.screen.z * rumble_width_k), (i / 3) % 2 ? rumble1_color : rumble2_color);
 
 		// Segment
-		draw_quad(*window, s.screen_top, s.screen_bottom, (i / 3) % 2 ? road1_color : road2_color);
+		draw_quad(*window, s.screen, old.screen, (i / 3) % 2 ? road1_color : road2_color);
 	}
 }
