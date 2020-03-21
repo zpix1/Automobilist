@@ -19,10 +19,11 @@ class Game {
 	float position = 0;
 	float speed = 0;
 
-	void process_keypress();
+	void process_keypress(float dt);
 	void render_info();
 public:
 	Game(sf::RenderWindow* w);
 	void render(sf::Event event);
+	void update(float dt);
 };
 

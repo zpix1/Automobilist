@@ -30,12 +30,14 @@ const float camera_depth = 1;
 
 const float x_speed = 200;
 const float fogDensity = 5;
-const float max_speed = 300;
-const float accel = 5;
+const float max_speed = 100;
+const float accel = max_speed / 5;
 const float breaking = -max_speed;
-const float decel = 0.5;
+const float decel = max_speed / 5;
 const float off_road_decel = -max_speed / 2;
 const float off_road_limit = max_speed / 4;
+
+const float centrifugal = 0.3;
 
 const int segments_buffer_size = 1600;
 

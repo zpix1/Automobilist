@@ -15,7 +15,7 @@ Game::Game(sf::RenderWindow* w) {
 
 		segment.world.z = i * segment_length;
 
-		segment.curve = (i > 300 && i < 700) ? 0.5 : 0;
+		segment.curve = (i > 100 && i < 700) ? -0.5 : 0;
 		if (i > 100) {
 			segment.world.y = sin((i) / 30.0) * 1500;
 		}
@@ -32,38 +32,47 @@ void Game::render_info() {
 	atext.setPosition(0, 0);
 	atext.setFont(main_font);
 	char s[200];
-	sprintf_s(s, "speed: %0.1fkm/s\nposition: %0.1f", speed, position);
+	sprintf_s(s, "speed: %0.1fkm/s / %f\nposition: %0.1f\nplayerX: %f", speed, max_speed, position, playerX);
 	atext.setString(s);
 
 	//draw the string
 	window->draw(atext);
 }
 
-void Game::process_keypress() {
-	if (speed > 0) {
-		speed = std::max(0.0f, speed - decel);
+void Game::process_keypress(float dt) {
+	dt = dt;
+	float dx = dt * 2 * (speed / max_speed) * 1600;
+	{
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+			playerX += std::max(0.0f, dx);
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+			playerX -= std::max(0.0f, dx);
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+			speed += accel * dt;
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+			speed -= accel * dt;
+			if (speed > 0) {
+				speed += breaking * dt;
+			}
+			speed = std::max(-10.0f, speed);
+		}
 	}
-	else {
-		speed = std::min(0.0f, speed + decel);
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-		playerX -= x_speed;
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-		playerX += x_speed;
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-		speed += accel;
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-		speed -= accel;
-	}
+
+	int start_segment_i = ceil(position / segment_length);
+
 	speed = std::min(speed, max_speed);
 	position = std::max(0.0f, position + speed);
+	playerX = playerX - (dx * segments[start_segment_i].curve * centrifugal);
+}
+
+void Game::update(float dt) {
+	process_keypress(dt);
 }
 
 void Game::render(sf::Event event) {
-	process_keypress();
 	render_info();
 	int start_segment_i = ceil(position / segment_length);
 	float camera_height = 1500 + segments[(start_segment_i) % segments_buffer_size].world.y;
@@ -77,8 +86,11 @@ void Game::render(sf::Event event) {
 
 		x += dx;
 		dx += s.curve;
+
 		if (s.screen.y >= maxy) continue;
+
 		maxy = s.screen.y;
+
 		if (i < 1) continue;
 
 		Segment old = segments[(i - 1) % segments_buffer_size];
@@ -91,4 +103,5 @@ void Game::render(sf::Event event) {
 		// Segment
 		draw_quad(*window, s.screen, old.screen, (i / 3) % 2 ? road1_color : road2_color);
 	}
+
 }
