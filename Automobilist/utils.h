@@ -18,7 +18,7 @@ const sf::Color rumble2_color = sf::Color(0, 0, 0);
 const sf::Color grass1_color = sf::Color(16, 200, 16);
 const sf::Color grass2_color = sf::Color(0, 154, 0);
 
-const float road_width = 2000.0;
+const float road_width = 5000.0;
 const float segment_length = 200.0;
 const float rumble_width_k = 1.2;
 //const float track_length = 0;
@@ -30,15 +30,17 @@ const float camera_depth = 1;
 
 const float x_speed = 200;
 const float fogDensity = 5;
-const float max_speed = 100;
+const float max_speed = 200;
 const float accel = max_speed / 5;
 const float breaking = -max_speed;
-const float decel = max_speed / 5;
-const float off_road_decel = -max_speed / 2;
+const float decel = max_speed / 20;
+const float off_road_decel = max_speed / 2;
 const float off_road_limit = max_speed / 4;
-
+const float max_re_speed = max_speed / 8;
 const float centrifugal = 0.3;
 
 const int segments_buffer_size = 1600;
+
+const int amount_of_textures = 1;
 
 void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f screen_bottom, sf::Color color);

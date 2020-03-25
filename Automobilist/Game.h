@@ -11,6 +11,10 @@
 class Game {
 	sf::RenderWindow* window;
 	sf::Font main_font;
+	sf::Texture bg;
+	sf::Sprite background;
+
+	std::vector<sf::Texture> textures;
 
 	// Cooridinates of segment bottom line center
 	std::vector<Segment> segments;

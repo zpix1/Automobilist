@@ -9,6 +9,15 @@ int main() {
 	sf::Clock clock;
 	float last = clock.getElapsedTime().asMilliseconds();
 	float gdt = 0;
+
+	sf::Texture bg;
+	if (!bg.loadFromFile("textures/bg.png")) {
+		printf("Can't load background texture\n");
+	}
+	bg.setRepeated(true);
+	sf::Sprite background(bg);
+
+
 	while (window.isOpen()) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
@@ -17,8 +26,6 @@ int main() {
 			}
 		}
 
-		window.clear(background);
-
 		float now = clock.getElapsedTime().asMilliseconds();
 		float dt = std::min(1.f, (now - last) / 1000.0f);
 		gdt = gdt + dt;
@@ -26,13 +33,9 @@ int main() {
 			gdt = gdt - step;
 			game.update(step);
 		}
-		game.render(event);
-		
 		last = now;
 
-
-
-		window.display();
+		game.render(event);
 	}
 
 	return 0;
