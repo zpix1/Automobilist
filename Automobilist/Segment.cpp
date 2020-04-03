@@ -12,9 +12,9 @@ Segment::Segment() {
 
 void Segment::project(sf::Vector3f& camera) {
 	scale = camera_depth / (world.z - camera.z);
-	screen.x = (1 + scale * (world.x - camera.x)) * width / 2;
-	screen.y = (1 - scale * (world.y - camera.y)) * height / 2;
-	screen.z = scale * road_width * width / 2;
+	screen.x = (1.0 + scale * (world.x - camera.x)) * width / 2.0;
+	screen.y = (1.0 - scale * (world.y - camera.y)) * height / 2.0;
+	screen.z = scale * road_width * width / 2.0;
 }
 
 void Segment::draw_sprite(sf::RenderWindow& app) {
@@ -27,8 +27,8 @@ void Segment::draw_sprite(sf::RenderWindow& app) {
 	float destW = w * screen.z / 266;
 	float destH = h * screen.z / 266;
 
-	destX += destW * spriteX; //offsetX
-	destY += destH * (-1);    //offsetY
+	destX += destW * spriteX; // offsetX
+	destY += destH * (-1);    // offsetY
 
 	float clipH = destY + destH - clip;
 	if (clipH < 0) clipH = 0;
@@ -36,6 +36,6 @@ void Segment::draw_sprite(sf::RenderWindow& app) {
 	if (clipH >= destH) return;
 	s.setTextureRect(sf::IntRect(0, 0, w, h - h * clipH / destH));
 	s.setScale(destW / w, destH / h);
-	s.setPosition(destX, destY);
+	s.setPosition(destX - destW / 2, destY);
 	app.draw(s);
 }
