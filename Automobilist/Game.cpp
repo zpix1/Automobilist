@@ -26,7 +26,8 @@ Game::Game(sf::RenderWindow* w) {
 		Segment segment;
 
 		segment.world.z = i * segment_length;
-		switch ((i / 300) % 3) {
+		segment.curve = 3.0;
+		/*switch ((i / 300) % 3) {
 		case 0:
 			segment.curve = 3.0;
 			break;
@@ -47,7 +48,7 @@ Game::Game(sf::RenderWindow* w) {
 		}
 		if (i > 100) {
 			segment.world.y = sin((i) / 30.0) * 1500;
-		}
+		}*/
 
 		segments.push_back(segment);
 	}
@@ -150,6 +151,10 @@ void Game::render(sf::Event event) {
 	float x = 0;
 	float dx = 0;
 	float maxy = height;
+
+	float segment_pos = position - segment_length * floor(position / segment_length);
+
+	dx = -segments[(start_segment_i) % segments_buffer_size].curve * segment_pos / segment_length;
 
 	for (int i = start_segment_i; i < start_segment_i + draw_distance; i++) {
 		Segment& s = segments[i % segments_buffer_size];
