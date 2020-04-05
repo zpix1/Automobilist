@@ -36,6 +36,8 @@ const float off_road_limit = max_speed / 8;
 const float max_reverse_speed = max_speed / 8;
 const float centrifugal = 0.3;
 
+const int total_cars = 10;
+
 const int segments_buffer_size = 1600;
 
 const int amount_of_textures = 3;

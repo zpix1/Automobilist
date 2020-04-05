@@ -17,8 +17,9 @@ class Game {
 
 	std::vector<sf::Texture> textures;
 
-	// Cooridinates of segment bottom line center
 	std::vector<Segment> segments;
+
+	std::vector< std::shared_ptr<Car> > cars;
 	
 	float player_x = 0;
 	float position = 0;
@@ -28,6 +29,9 @@ class Game {
 	void process_keypress(float dt);
 	void render_info();
 	void render_player();
+	void load_textures();
+	void fill_segments();
+	void reset_cars();
 public:
 	Game(sf::RenderWindow* w);
 	void render(sf::Event event);

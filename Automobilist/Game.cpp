@@ -2,31 +2,34 @@
 
 #include <string>
 
-Game::Game(sf::RenderWindow* w) {
-
+void Game::load_textures() {
 	if (!main_font.loadFromFile("./Xenogears.ttf")) {
 		printf("Can't load font\n");
 	}
 
-	window = w;
 	if (!bg.loadFromFile("textures/background.png")) {
 		printf("Can't load background texture\n");
 	}
 	bg.setRepeated(true);
 	background.setTexture(bg);
+
 	for (int i = 0; i < amount_of_textures; i++) {
 		sf::Texture t;
 		textures.push_back(t);
-		textures[i].loadFromFile("textures/" + std::to_string(i) + ".png");
+		if (!textures[i].loadFromFile("textures/" + std::to_string(i) + ".png")) {
+			printf("Can't load texture textures/%d.png", i);
+		}
 	}
+
 	player.setTexture(textures[1]);
+}
 
-
+void Game::fill_segments() {
 	for (int i = 0; i < segments_buffer_size; i++) {
 		Segment segment;
 
 		segment.world.z = i * segment_length;
-		segment.curve = 3.0;
+
 		/*switch ((i / 300) % 3) {
 		case 0:
 			segment.curve = 3.0;
@@ -45,14 +48,37 @@ Game::Game(sf::RenderWindow* w) {
 				segment.spriteX = -2.0;
 			}
 			segment.sprite.setTexture(textures[2]);
-		}
+		}*/
 		if (i > 100) {
 			segment.world.y = sin((i) / 30.0) * 1500;
-		}*/
+		}
 
 		segments.push_back(segment);
 	}
+}
 
+void Game::reset_cars() {
+	cars.clear();
+
+	for (int i = 0; i < total_cars; i++) {
+		Car car;
+		car.x = ((float)rand() / RAND_MAX) * 4.0 - 2.0;
+		car.position = 100 * i * segment_length;
+		car.speed = 100.0;
+		car.sprite.setTexture(textures[1]);
+
+		std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
+
+		cars.push_back(ptr);
+		segments[(int)floor(car.position / segment_length) % segments_buffer_size].cars.push_back(ptr);
+	}
+}
+
+Game::Game(sf::RenderWindow* w) {
+	window = w;
+	load_textures();
+	fill_segments();
+	reset_cars();
 }
 
 void Game::render_info() {
@@ -182,8 +208,10 @@ void Game::render(sf::Event event) {
 		draw_quad(*window, s.screen, old.screen, (i / 3) % 2 ? road1_color : road2_color);
 	}
 
-	for (int i = start_segment_i + 300; i > start_segment_i; i--) {
+	for (int i = start_segment_i + draw_distance; i > start_segment_i; i--) {
 		segments[i % segments_buffer_size].draw_sprite(*window);
+		segments[i % segments_buffer_size].draw_cars(*window);
+
 	}
 
 	render_player();
