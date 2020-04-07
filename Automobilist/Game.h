@@ -27,6 +27,7 @@ class Game {
 	float x_speed = 0;
 	
 	void process_keypress(float dt);
+	void update_cars(float dt);
 	void render_info();
 	void render_player();
 	void load_textures();

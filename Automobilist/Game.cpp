@@ -30,7 +30,7 @@ void Game::fill_segments() {
 
 		segment.world.z = i * segment_length;
 
-		/*switch ((i / 300) % 3) {
+		switch ((i / 300) % 3) {
 		case 0:
 			segment.curve = 3.0;
 			break;
@@ -48,7 +48,7 @@ void Game::fill_segments() {
 				segment.spriteX = -2.0;
 			}
 			segment.sprite.setTexture(textures[2]);
-		}*/
+		}
 		if (i > 100) {
 			segment.world.y = sin((i) / 30.0) * 1500;
 		}
@@ -63,8 +63,8 @@ void Game::reset_cars() {
 	for (int i = 0; i < total_cars; i++) {
 		Car car;
 		car.x = ((float)rand() / RAND_MAX) * 4.0 - 2.0;
-		car.position = 100 * i * segment_length;
-		car.speed = 100.0;
+		car.position = 100 * i * segment_length + 750;
+		car.speed = (600.0 + 400 * ((float)rand() / RAND_MAX)) * 5;
 		car.sprite.setTexture(textures[1]);
 
 		std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
@@ -135,8 +135,20 @@ void Game::process_keypress(float dt) {
 	player_x = player_x - x_speed;
 }
 
+void Game::update_cars(float dt) {
+	for (auto c : cars) {
+		Segment& s1 = segments[(int)floor(c->position / segment_length) % segments_buffer_size];
+		auto to_delete = std::find(s1.cars.begin(), s1.cars.end(), c);
+		s1.cars.erase(to_delete);
+		c->position += c->speed * dt;
+		Segment& s2 = segments[(int)floor(c->position / segment_length) % segments_buffer_size];
+		s2.cars.push_back(c);
+	}
+}
+
 void Game::update(float dt) {
 	process_keypress(dt);
+	update_cars(dt);
 }
 
 void Game::render_player() {
@@ -210,12 +222,42 @@ void Game::render(sf::Event event) {
 
 	for (int i = start_segment_i + draw_distance; i > start_segment_i; i--) {
 		segments[i % segments_buffer_size].draw_sprite(*window);
-		segments[i % segments_buffer_size].draw_cars(*window);
+
+		Segment s1 = segments[i % segments_buffer_size];
+		Segment s2 = segments[(i + 1) % segments_buffer_size];
+
+
+		for (int car_i = 0; car_i < s1.cars.size(); car_i++) {
+			Car& c = *s1.cars[car_i];
+			sf::Sprite s = c.sprite;
+			int w = s.getTextureRect().width;
+			int h = s.getTextureRect().height;
+
+			float percent = (c.position - floor(c.position / segment_length) * segment_length) / segment_length;
+
+			float destX = interpolate(s1.screen.x, s2.screen.x, percent); // + scale * c.x * width / 2;
+			float destY = interpolate(s1.screen.y, s2.screen.y, percent);
+			float destW = w * interpolate(s1.screen.z, s2.screen.z, percent) / 266;
+			float destH = h * interpolate(s1.screen.z, s2.screen.z, percent) / 266;
+
+			destX += destW * c.x;
+			destY -= destH;
+
+			float clipH = destY + destH - s1.clip;
+			if (clipH < 0) clipH = 0;
+
+			if (clipH >= destH) continue;
+
+			s.setTextureRect(sf::IntRect(0, 0, w, h - h * clipH / destH));
+			s.setScale(destW / w, destH / h);
+			s.setPosition(destX - destW / 2, destY);
+
+			window->draw(s);
+		}
 
 	}
 
 	render_player();
 
 	window->display();
-
 }

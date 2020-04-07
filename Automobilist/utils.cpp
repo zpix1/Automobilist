@@ -9,3 +9,7 @@ void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f s
 	shape.setPoint(3, sf::Vector2f(screen_bottom.x - screen_bottom.z, screen_bottom.y));
 	window.draw(shape);
 }
+
+float interpolate(float a, float b, float percent) {
+	return a + (b - a) * percent;
+}

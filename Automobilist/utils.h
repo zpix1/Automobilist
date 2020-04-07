@@ -36,10 +36,12 @@ const float off_road_limit = max_speed / 8;
 const float max_reverse_speed = max_speed / 8;
 const float centrifugal = 0.3;
 
-const int total_cars = 10;
+const int total_cars = 100;
 
 const int segments_buffer_size = 1600;
 
 const int amount_of_textures = 3;
 
 void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f screen_bottom, sf::Color color);
+
+float interpolate(float a, float b, float percent);

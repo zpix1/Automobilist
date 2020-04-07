@@ -21,6 +21,6 @@ struct Segment {
 	Segment();
 	void project(sf::Vector3f& camera);
 	void draw_sprite(sf::RenderWindow& app);
-	void draw_cars(sf::RenderWindow& app);
+	void draw_cars(sf::RenderWindow& app, sf::Vector3f camera);
 };
 
