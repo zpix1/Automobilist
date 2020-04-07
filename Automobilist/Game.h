@@ -33,6 +33,7 @@ class Game {
 	void load_textures();
 	void fill_segments();
 	void reset_cars();
+	void process_collisions();
 public:
 	Game(sf::RenderWindow* w);
 	void render(sf::Event event);

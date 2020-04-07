@@ -35,8 +35,11 @@ const float off_road_decel = max_speed / 1.3;
 const float off_road_limit = max_speed / 8;
 const float max_reverse_speed = max_speed / 8;
 const float centrifugal = 0.3;
+const float player_scale = 2;
+const float car_scale = player_scale;
 
-const int total_cars = 100;
+
+const int total_cars = 1;
 
 const int segments_buffer_size = 1600;
 
@@ -45,3 +48,5 @@ const int amount_of_textures = 3;
 void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f screen_bottom, sf::Color color);
 
 float interpolate(float a, float b, float percent);
+
+bool overlap(float x1, float w1, float x2, float w2, float percent);
