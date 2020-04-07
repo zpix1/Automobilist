@@ -39,7 +39,7 @@ const float player_scale = 2;
 const float car_scale = player_scale;
 
 
-const int total_cars = 1;
+const int total_cars = 100;
 
 const int segments_buffer_size = 1600;
 

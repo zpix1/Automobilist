@@ -30,7 +30,7 @@ void Game::fill_segments() {
 
 		segment.world.z = i * segment_length;
 
-		/*switch ((i / 300) % 3) {
+		switch ((i / 300) % 3) {
 		case 0:
 			segment.curve = 3.0;
 			break;
@@ -40,15 +40,15 @@ void Game::fill_segments() {
 		case 2:
 			segment.curve = -3.7;
 			break;
-		}*/
-		if (i % 100 == 0) {
+		}
+		if (i % 10 == 0) {
 
-			segment.spriteX = 1.0;
+			segment.spriteX = 3.0;
 			segment.sprite.setTexture(textures[2]);
 		}
-		if (i > 100) {
+		/*if (i > 0) {
 			segment.world.y = sin((i) / 30.0) * 1500;
-		}
+		}*/
 
 		segments.push_back(segment);
 	}
@@ -59,9 +59,9 @@ void Game::reset_cars() {
 
 	for (int i = 0; i < total_cars; i++) {
 		Car car;
-		car.x = 0.4;//((float)rand() / RAND_MAX) * 4.0 - 2.0;
-		car.position = 100 * i * segment_length + 750;
-		car.speed = (10.0 + 10 * ((float)rand() / RAND_MAX));
+		car.x = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+		car.position = 1000 * i * segment_length;
+		car.speed =  (200.0 + 200 * ((float)rand() / RAND_MAX));
 		car.sprite.setTexture(textures[1]);
 
 		std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
@@ -144,21 +144,21 @@ void Game::update_cars(float dt) {
 }
 
 void Game::process_collisions() {
-	Segment& s = segments[(int)floor(position / segment_length) % segments_buffer_size];
+	Segment& s = segments[(int)floor((position + 2000) / segment_length) % segments_buffer_size];
 
-	for (auto c : s.cars) {
+	/*for (auto c : s.cars) {
 		if (speed >= c->speed)
-		if (overlap(player_x / road_width, 0.5, c->x, 0.5, 0.8)) {
+		if (overlap(player_x / road_width, 1, c->x, 1, 0.1)) {
 			printf("OVERLAP speed = %f car_speed = %f px=%f cx=%f\n", speed, c->speed, player_x / width, c->x);
 			
+			speed = 25;
 		}
-	}
+	}*/
 }
 
 void Game::update(float dt) {
 	process_keypress(dt);
 	update_cars(dt);
-	process_collisions();
 }
 
 void Game::render_player() {
@@ -184,6 +184,9 @@ void Game::render_player() {
 }
 
 void Game::render(sf::Event event) {
+
+	process_collisions();
+
 	window->draw(background);
 
 	render_info();
@@ -234,6 +237,7 @@ void Game::render(sf::Event event) {
 		segments[i % segments_buffer_size].draw_sprite(*window);
 
 		Segment s1 = segments[i % segments_buffer_size];
+		if ((i + 1) % segments_buffer_size == 0) continue;
 		Segment s2 = segments[(i + 1) % segments_buffer_size];
 
 
@@ -244,24 +248,22 @@ void Game::render(sf::Event event) {
 			int h = s.getTextureRect().height;
 
 			float percent = (c.position - floor(c.position / segment_length) * segment_length) / segment_length;
-
-			float destX = interpolate(s1.screen.x, s2.screen.x, percent);
+			float destX = interpolate(s1.screen.x, s2.screen.x, percent);// + interpolate(s1.scale, s2.scale, percent) * road_width * c.x / 2;
 			float destY = interpolate(s1.screen.y, s2.screen.y, percent);
-			float destW = w * interpolate(s1.scale, s2.scale, percent) * 3000;
-			float destH = h * interpolate(s1.scale, s2.scale, percent) * 3000;
+			float destW = w * interpolate(s1.scale, s2.scale, percent) * 3000 * car_scale;
+			float destH = h * interpolate(s1.scale, s2.scale, percent) * 3000 * car_scale;
 
-			destX += c.x * interpolate(s1.scale, s2.scale, percent) * road_width * width / 2.0;
+			destX += c.x * interpolate(s1.scale, s2.scale, percent) * road_width * width / car_scale;
 			destY -= destH;
 
-			float clipH = destY + destH - s1.clip;
+			float clipH = destY + destH - s2.clip;
 			if (clipH < 0) clipH = 0;
 
 			if (clipH >= destH) continue;
 
 			s.setTextureRect(sf::IntRect(0, 0, w, h - h * clipH / destH));
-			s.setScale(destW / w * car_scale, destH / h * car_scale);
+			s.setScale(destW / w, destH / h);
 			s.setPosition(destX - destW / 2, destY);
-
 			window->draw(s);
 		}
 

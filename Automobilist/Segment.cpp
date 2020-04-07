@@ -22,13 +22,13 @@ void Segment::draw_sprite(sf::RenderWindow& app) {
 	int w = s.getTextureRect().width;
 	int h = s.getTextureRect().height;
 
-	float destX = screen.x;// +scale * spriteX * road_width / 2;
+	float destX = screen.x + scale * spriteX * road_width / 2;
 	float destY = screen.y;
 	float destW = w * screen.z / 266;
 	float destH = h * screen.z / 266;
 
 	destX += destW * spriteX;
-	destY += destH * (-1);
+	destY -= destH;
 
 	float clipH = destY + destH - clip;
 	if (clipH < 0) clipH = 0;
@@ -36,7 +36,7 @@ void Segment::draw_sprite(sf::RenderWindow& app) {
 	if (clipH >= destH) return;
 	s.setTextureRect(sf::IntRect(0, 0, w, h - h * clipH / destH));
 	s.setScale(destW / w, destH / h);
-	s.setPosition(destX - destW / 2, destY);  
+	s.setPosition(destX, destY);  
 	app.draw(s);
 }
 
