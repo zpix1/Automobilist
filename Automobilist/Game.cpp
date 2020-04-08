@@ -4,26 +4,25 @@
 
 void Game::load_textures() {
 	if (!main_font.loadFromFile("./Xenogears.ttf")) {
-		printf("Can't load font\n");
+		fprintf(stderr, "[ERROR] Can't load font\n");
 	}
 
-	if (!bg.loadFromFile("textures/background.png")) {
-		printf("Can't load background texture\n");
+	if (!background_texture.loadFromFile("textures/background.png")) {
+		fprintf(stderr, "[ERROR] Can't load background texture\n");
 	}
-	bg.setRepeated(true);
-	background.setTexture(bg);
 
-	for (int i = 0; i < amount_of_textures; i++) {
-		sf::Texture t;
-		textures.push_back(t);
+	background_texture.setRepeated(true);
+	background.setTexture(background_texture);
+
+	for (int i = 0; i < total_textures; i++) {
+		sf::Texture temp_texture;
+		textures.push_back(temp_texture);
 		if (!textures[i].loadFromFile("textures/" + std::to_string(i) + ".png")) {
-			printf("Can't load texture textures/%d.png", i);
+			printf("[ERROR] Can't load texture textures/%d.png", i);
 		}
 	}
 
 	player.sprite.setTexture(textures[1]);
-	player.position = 6 * segment_length;
-	player.x = 0;
 }
 
 void Game::fill_segments() {
@@ -32,36 +31,39 @@ void Game::fill_segments() {
 
 		segment.world.z = i * segment_length;
 
-		switch ((i / 300) % 3) {
-		case 0:
-			segment.curve = 3.0;
-			break;
-		case 1:
-			segment.curve = 3.0;
-			break;
-		case 2:
-			segment.curve = -3.7;
-			break;
+		// Add hills
+		if (i > 0) {
+			segment.world.y = sin((i) / 30.0) * 1500;
 		}
+		// Add curves
+		switch ((i / 300) % 3) {
+			case 0:
+				segment.curve = 3.0;
+				break;
+			case 1:
+				segment.curve = 3.0;
+				break;
+			case 2:
+				segment.curve = -3.7;
+				break;
+		}
+		// Add sprites
 		if (i % 10 == 0) {
-
-			segment.spriteX = 3.0;
+			segment.sprite_x = 3.0;
 			segment.sprite.setTexture(textures[2]);
 		}
-		/*if (i > 0) {
-			segment.world.y = sin((i) / 30.0) * 1500;
-		}*/
 
 		segments.push_back(segment);
 	}
 }
 
 void Game::reset_cars() {
+	// Remove old cars
 	cars.clear();
 
 	for (int i = 0; i < total_cars; i++) {
 		Car car;
-		car.x = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+		car.x = randint(-1, 1) * 2.0 / 3.0;
 		car.position = 1000 * i * segment_length;
 		car.speed =  (30.0 + 0 * ((float)rand() / RAND_MAX));
 		car.sprite.setTexture(textures[1]);
@@ -69,7 +71,7 @@ void Game::reset_cars() {
 		std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
 
 		cars.push_back(ptr);
-		segments[(int)floor(car.position / segment_length) % segments_buffer_size].cars.push_back(ptr);
+		segments[find_segment_i(car.position)].cars.push_back(ptr);
 	}
 }
 
@@ -81,72 +83,72 @@ Game::Game(sf::RenderWindow* w) {
 }
 
 void Game::render_info() {
-	sf::Text atext;
-	atext.setCharacterSize(20);
-	atext.setFillColor(sf::Color(0, 0, 0));
-	atext.setPosition(0, 0);
-	atext.setFont(main_font);
-	char s[200];
-	sprintf_s(s, "speed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f", speed, max_speed, position, player_x);
-	atext.setString(s);
-	window->draw(atext);
+	sf::Text info_panel;
+	info_panel.setCharacterSize(20);
+	info_panel.setFillColor(sf::Color(0, 0, 0));
+	info_panel.setPosition(0, 0);
+	info_panel.setFont(main_font);
+	char info_text[200];
+	sprintf_s(info_text, "speed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f", camera_speed, max_speed, camera_position, camera_x);
+	info_panel.setString(info_text);
+	window->draw(info_panel);
 }
 
 void Game::process_keypress(float dt) {
-	x_speed = 2.0 * (speed / max_speed) * max_x_speed;
+	camera_x_speed = 2.0 * (camera_speed / max_speed) * max_x_speed;
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-		player_x += std::max(0.0f, x_speed * dt);
+		camera_x += std::max(0.0f, camera_x_speed * dt);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-		player_x -= std::max(0.0f, x_speed * dt);
+		camera_x -= std::max(0.0f, camera_x_speed * dt);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-		speed += accel * dt;
+		camera_speed += acceleration_value * dt;
 	}
 	else {
-		if (speed > 0) {
-			speed -= decel * dt;
-			speed = std::max(speed, 0.0f);
+		if (camera_speed > 0) {
+			camera_speed -= deceleration_value * dt;
+			camera_speed = std::max(camera_speed, 0.0f);
 		}
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-		speed -= accel * dt;
-		if (speed > 0) {
-			speed -= breaking * dt;
+		camera_speed -= acceleration_value * dt;
+		if (camera_speed > 0) {
+			camera_speed -= breaking_value * dt;
 		}
-		speed = std::max(-max_reverse_speed, speed);
+		camera_speed = std::max(-reverse_max_speed, camera_speed);
 	}
 
 
-	if (fabs(player_x) > road_width && speed > off_road_limit) {
-		speed -= off_road_decel * dt;
+	if (fabs(camera_x) > road_width && camera_speed > off_road_max_speed) {
+		camera_speed -= off_road_deceleration_value * dt;
 	}
 
 
-	speed = std::min(speed, max_speed);
-	position = std::max(0.0f, position + speed);
+	camera_speed = std::min(camera_speed, max_speed);
+	camera_position = std::max(0.0f, camera_position + camera_speed);
 
-	while (position >= segments_buffer_size * segment_length) position -= segments_buffer_size * segment_length;
-	while (position < 0) position += segments_buffer_size * segment_length;
+	while (camera_position >= segments_buffer_size * segment_length) camera_position -= segments_buffer_size * segment_length;
+	while (camera_position < 0) camera_position += segments_buffer_size * segment_length;
 
-	int start_segment_i = floor(position / segment_length);
-	x_speed = (x_speed * dt * segments[start_segment_i].curve * centrifugal / 3.0);
-	player_x = player_x - x_speed;
+	int start_segment_i = find_segment_i(camera_position);
+	camera_x_speed = (camera_x_speed * dt * segments[start_segment_i].curve * centrifugal_k / 3.0);
+	camera_x = camera_x - camera_x_speed;
 }
 
 void Game::update_cars(float dt) {
 	for (auto c : cars) {
-		Segment& s1 = segments[(int)floor(c->position / segment_length) % segments_buffer_size];
+		Segment& s1 = segments[find_segment_i(c->position)];
 		auto to_delete = std::find(s1.cars.begin(), s1.cars.end(), c);
 		s1.cars.erase(to_delete);
 		c->position += c->speed;
-		Segment& s2 = segments[(int)floor(c->position / segment_length) % segments_buffer_size];
+		Segment& s2 = segments[find_segment_i(c->position)];
 		s2.cars.push_back(c);
 	}
 }
 
 void Game::process_collisions() {
-	Segment& s = segments[(int)floor((position + 2000) / segment_length) % segments_buffer_size];
+	Segment& s = segments[find_segment_i(camera_position)];
 
 	/*for (auto c : s.cars) {
 		if (speed >= c->speed)
@@ -164,31 +166,28 @@ void Game::update(float dt) {
 }
 
 void Game::render_player() {
-	player.x = player_x / road_width;
-	player.position = position + segment_length * 6;
+	player.x = camera_x / road_width;
+	player.position = camera_position + segment_length * 6;
 
-	int start_segment_i = floor(player.position / segment_length);
+	int start_segment_i = find_segment_i(player.position);
 
-	Segment s1 = segments[(start_segment_i) % segments_buffer_size];
+	Segment s1 = segments[start_segment_i];
 	Segment s2 = segments[(start_segment_i + 1) % segments_buffer_size];
 
 	sf::Sprite s = player.sprite;
 	int w = s.getTextureRect().width;
 	int h = s.getTextureRect().height;
 
-	float percent = (player.position - start_segment_i * segment_length) / segment_length;
+	float percent = get_segment_percent(player.position);
 	float destX = interpolate(s1.screen.x, s2.screen.x, percent);// + interpolate(s1.scale, s2.scale, percent) * road_width * c.x / 2;
 	float destY = interpolate(s1.screen.y, s2.screen.y, percent);
 	float destW = w * interpolate(s1.scale, s2.scale, percent) * scale_to_car_k * player_scale;
 	float destH = h * interpolate(s1.scale, s2.scale, percent) * scale_to_car_k * player_scale;
 
-	destX += player.x * interpolate(s1.scale, s2.scale, percent) * road_width * width / player_scale;
+	destX += interpolate(s1.scale, s2.scale, percent) * player.x * road_width * width / player_scale;
 	destY -= destH;
 
-	printf("%f %f\n", cars[0]->position, player.position);
-	//printf("ssi = %d, destX = %f, destY = %f, destW = %f, destH = %f\n", start_segment_i, destX, destY, destW, destH);
-	
-	if (x_speed < 0) {
+	if (camera_x_speed < 0) {
 		s.setTextureRect(sf::IntRect(w, 0, -w, h));
 	}
 	else {
@@ -213,46 +212,48 @@ void Game::render(sf::Event event) {
 
 	render_info();
 
-	int start_segment_i = ceil(position / segment_length);
+	int start_segment_i = (int)ceil(camera_position / segment_length) % segments_buffer_size;
 
-	float segment_x_offset = position - start_segment_i * segment_length;
-	float segement_x_diff = segments[(start_segment_i + 1) % segments_buffer_size].world.z - segments[start_segment_i % segments_buffer_size].world.z;
-	float segement_y_diff = segments[(start_segment_i + 1) % segments_buffer_size].world.y - segments[start_segment_i % segments_buffer_size].world.y;
+	float segment_x_offset = camera_position - start_segment_i * segment_length;
+	float segement_x_diff = segments[(start_segment_i + 1) % segments_buffer_size].world.z - segments[start_segment_i].world.z;
+	float segement_y_diff = segments[(start_segment_i + 1) % segments_buffer_size].world.y - segments[start_segment_i].world.y;
 	float segment_y_offset = segment_x_offset * segement_y_diff / segement_x_diff;
 
-	float camera_height = s_camera_height + segments[(start_segment_i) % segments_buffer_size].world.y + segment_y_offset;
+	float camera_height = camera_height_offset + segments[start_segment_i].world.y + segment_y_offset;
 	float x = 0;
 	float dx = 0;
-	float maxy = height;
+	float max_y = height;
 
-	float segment_pos = position - segment_length * floor(position / segment_length);
+	float segment_percent = get_segment_percent(camera_position);
 
-	dx = -segments[(start_segment_i) % segments_buffer_size].curve * segment_pos / segment_length;
+	dx = -segments[start_segment_i].curve * segment_percent;
 
 	for (int i = start_segment_i; i < start_segment_i + draw_distance; i++) {
-		Segment& s = segments[i % segments_buffer_size];
-		sf::Vector3f camera(player_x - x, camera_height, position - (i >= segments_buffer_size ? segments_buffer_size * segment_length : 0));
-		s.project(camera);
+		Segment& s1 = segments[i % segments_buffer_size];
+		
+		sf::Vector3f camera(camera_x - x, camera_height, camera_position - (i >= segments_buffer_size ? segments_buffer_size * segment_length : 0));
+		
+		s1.project(camera);
 
 		x += dx;
-		dx += s.curve;
+		dx += s1.curve;
 
-		s.clip = maxy;
+		s1.clip = max_y;
+		if (s1.screen.y >= max_y) continue;
+		max_y = s1.screen.y;
 
-		if (s.screen.y >= maxy) continue;
-
-		maxy = s.screen.y;
 		if (i < 1) continue;
 
-		Segment old = segments[(i - 1) % segments_buffer_size];
+		Segment s2 = segments[(i - 1) % segments_buffer_size];
+		
 		// Grass
-		draw_quad(*window, sf::Vector3f(0, s.screen.y, width), sf::Vector3f(0, old.screen.y, width), (i / 3) % 2 ? grass1_color : grass2_color);
+		draw_quad(*window, sf::Vector3f(0, s1.screen.y, width), sf::Vector3f(0, s2.screen.y, width), (i / 3) % 2 ? grass1_color : grass2_color);
 
 		// Rumble
-		draw_quad(*window, sf::Vector3f(s.screen.x, s.screen.y, s.screen.z * rumble_width_k), sf::Vector3f(old.screen.x, old.screen.y, old.screen.z * rumble_width_k), (i / 3) % 2 ? rumble1_color : rumble2_color);
+		draw_quad(*window, sf::Vector3f(s1.screen.x, s1.screen.y, s1.screen.z * rumble_width_k), sf::Vector3f(s2.screen.x, s2.screen.y, s2.screen.z * rumble_width_k), (i / 3) % 2 ? rumble1_color : rumble2_color);
 
 		// Segment
-		draw_quad(*window, s.screen, old.screen, (i / 3) % 2 ? road1_color : road2_color);
+		draw_quad(*window, s1.screen, s2.screen, (i / 3) % 2 ? road1_color : road2_color);
 	}
 
 	for (int i = start_segment_i + draw_distance; i > start_segment_i; i--) {
@@ -269,7 +270,7 @@ void Game::render(sf::Event event) {
 			int w = s.getTextureRect().width;
 			int h = s.getTextureRect().height;
 
-			float percent = (c.position - floor(c.position / segment_length) * segment_length) / segment_length;
+			float percent = get_segment_percent(c.position);
 			float destX = interpolate(s1.screen.x, s2.screen.x, percent);// + interpolate(s1.scale, s2.scale, percent) * road_width * c.x / 2;
 			float destY = interpolate(s1.screen.y, s2.screen.y, percent);
 			float destW = w * interpolate(s1.scale, s2.scale, percent) * scale_to_car_k * car_scale;
@@ -278,12 +279,12 @@ void Game::render(sf::Event event) {
 			destX += c.x * interpolate(s1.scale, s2.scale, percent) * road_width * width / car_scale;
 			destY -= destH;
 
-			float clipH = destY + destH - s2.clip;
-			if (clipH < 0) clipH = 0;
+			float clip_height = destY + destH - s2.clip;
 
-			if (clipH >= destH) continue;
+			if (clip_height < 0) clip_height = 0;
+			if (clip_height >= destH) continue;
 
-			s.setTextureRect(sf::IntRect(0, 0, w, h - h * clipH / destH));
+			s.setTextureRect(sf::IntRect(0, 0, w, h - h * clip_height / destH));
 			s.setScale(destW / w, destH / h);
 			s.setPosition(destX - destW / 2, destY);
 			window->draw(s);

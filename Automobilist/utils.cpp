@@ -15,11 +15,22 @@ float interpolate(float a, float b, float percent) {
 }
 
 bool overlap(float x1, float w1, float x2, float w2, float percent) {
-	printf("%f %f %f %f %f\n", x1, w1, x2, w2, percent);
 	float half = (percent) / 2;
 	float min1 = x1 - (w1 * half);
 	float max1 = x1 + (w1 * half);
 	float min2 = x2 - (w2 * half);
 	float max2 = x2 + (w2 * half);
 	return !((max1 < min2) || (min1 > max2));
+}
+
+int randint(int min, int max) {
+	return min + (rand() % static_cast<int>(max - min + 1));
+}
+
+int find_segment_i(float position) {
+	return (int)floor(position / segment_length) % segments_buffer_size;
+}
+
+float get_segment_percent(float position) {
+	return (position - find_segment_i(position) * segment_length) / segment_length;
 }

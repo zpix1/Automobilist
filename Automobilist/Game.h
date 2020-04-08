@@ -11,31 +11,34 @@
 class Game {
 	sf::RenderWindow* window;
 	sf::Font main_font;
-	sf::Texture bg;
+
 	sf::Sprite background;
 
 	Car player;
-	//sf::Sprite player;
+	std::vector< std::shared_ptr<Car> > cars;
 
+	sf::Texture background_texture;
 	std::vector<sf::Texture> textures;
 
 	std::vector<Segment> segments;
 
-	std::vector< std::shared_ptr<Car> > cars;
+	float camera_x = 0;
+	float camera_position = 0;
+	float camera_speed = 0;
+	float camera_x_speed = 0;
 	
-	float player_x = 0;
-	float position = 0;
-	float speed = 0;
-	float x_speed = 0;
-	
-	void process_keypress(float dt);
-	void update_cars(float dt);
-	void render_info();
-	void render_player();
+
 	void load_textures();
 	void fill_segments();
 	void reset_cars();
+
+	void process_keypress(float dt);
+	void update_cars(float dt);
 	void process_collisions();
+
+	void render_info();
+	void render_player();
+
 public:
 	Game(sf::RenderWindow* w);
 	void render(sf::Event event);

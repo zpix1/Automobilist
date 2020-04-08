@@ -6,7 +6,7 @@ Segment::Segment() {
 
 	curve = 0;
 	scale = 0;
-	spriteX = 0;
+	sprite_x = 0;
 	clip = 0;
 }
 
@@ -22,12 +22,12 @@ void Segment::draw_sprite(sf::RenderWindow& app) {
 	int w = s.getTextureRect().width;
 	int h = s.getTextureRect().height;
 
-	float destX = screen.x + scale * spriteX * road_width / 2;
+	float destX = screen.x + scale * sprite_x * road_width / 2;
 	float destY = screen.y;
 	float destW = w * screen.z / 266;
 	float destH = h * screen.z / 266;
 
-	destX += destW * spriteX;
+	destX += destW * sprite_x;
 	destY -= destH;
 
 	float clipH = destY + destH - clip;
@@ -38,31 +38,4 @@ void Segment::draw_sprite(sf::RenderWindow& app) {
 	s.setScale(destW / w, destH / h);
 	s.setPosition(destX, destY);  
 	app.draw(s);
-}
-
-void Segment::draw_cars(sf::RenderWindow& app, sf::Vector3f camera) {
-	for (int i = 0; i < cars.size(); i++) {
-		Car &c = *cars[i];
-		sf::Sprite s = c.sprite;
-		int w = s.getTextureRect().width;
-		int h = s.getTextureRect().height;
-
-
-		float destX = screen.x + scale * c.x * width / 2;
-		float destY = screen.y;
-		float destW = w * screen.z / 266;
-		float destH = h * screen.z / 266;
-
-		destX += destW * c.x;
-		destY -= destH;
-
-		float clipH = destY + destH - clip;
-		if (clipH < 0) clipH = 0;
-
-		if (clipH >= destH) return;
-		s.setTextureRect(sf::IntRect(0, 0, w, h - h * clipH / destH));
-		s.setScale(destW / w, destH / h);
-		s.setPosition(destX - destW / 2, destY);
-		app.draw(s);
-	}
 }
