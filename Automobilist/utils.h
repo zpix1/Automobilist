@@ -38,6 +38,7 @@ const float centrifugal = 0.3;
 const float player_scale = 2;
 const float car_scale = player_scale;
 
+const float scale_to_car_k = 3000.0;
 
 const int total_cars = 100;
 

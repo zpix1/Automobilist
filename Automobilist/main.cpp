@@ -13,6 +13,9 @@ int main() {
 	float last = clock.getElapsedTime().asMilliseconds();
 	float gdt = 0;
 
+#if (!DEBUG)
+	srand(time(NULL));
+#endif
 
 	while (window.isOpen()) {
 		sf::Event event;

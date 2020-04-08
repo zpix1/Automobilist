@@ -13,7 +13,9 @@ class Game {
 	sf::Font main_font;
 	sf::Texture bg;
 	sf::Sprite background;
-	sf::Sprite player;
+
+	Car player;
+	//sf::Sprite player;
 
 	std::vector<sf::Texture> textures;
 
