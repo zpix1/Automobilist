@@ -22,7 +22,7 @@ void Game::load_textures() {
 	}
 
 	player.sprite.setTexture(textures[1]);
-	player.position = 0;
+	player.position = 6 * segment_length;
 	player.x = 0;
 }
 
@@ -32,17 +32,17 @@ void Game::fill_segments() {
 
 		segment.world.z = i * segment_length;
 
-		//switch ((i / 300) % 3) {
-		//case 0:
-		//	segment.curve = 3.0;
-		//	break;
-		//case 1:
-		//	segment.curve = 3.0;
-		//	break;
-		//case 2:
-		//	segment.curve = -3.7;
-		//	break;
-		//}
+		switch ((i / 300) % 3) {
+		case 0:
+			segment.curve = 3.0;
+			break;
+		case 1:
+			segment.curve = 3.0;
+			break;
+		case 2:
+			segment.curve = -3.7;
+			break;
+		}
 		if (i % 10 == 0) {
 
 			segment.spriteX = 3.0;
@@ -63,7 +63,7 @@ void Game::reset_cars() {
 		Car car;
 		car.x = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
 		car.position = 1000 * i * segment_length;
-		car.speed =  (200.0 + 200 * ((float)rand() / RAND_MAX));
+		car.speed =  (30.0 + 0 * ((float)rand() / RAND_MAX));
 		car.sprite.setTexture(textures[1]);
 
 		std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
@@ -164,21 +164,19 @@ void Game::update(float dt) {
 }
 
 void Game::render_player() {
-	int start_segment_i = floor(position / segment_length) + 6;
-
-	Segment s1 = segments[start_segment_i % segments_buffer_size];
-	Segment s2 = segments[(start_segment_i + 1) % segments_buffer_size];
-
-
-	player.position = position + 6*segment_length;
 	player.x = player_x / road_width;
+	player.position = position + segment_length * 6;
+
+	int start_segment_i = floor(player.position / segment_length);
+
+	Segment s1 = segments[(start_segment_i) % segments_buffer_size];
+	Segment s2 = segments[(start_segment_i + 1) % segments_buffer_size];
 
 	sf::Sprite s = player.sprite;
 	int w = s.getTextureRect().width;
 	int h = s.getTextureRect().height;
 
 	float percent = (player.position - start_segment_i * segment_length) / segment_length;
-	printf("pc = %f, x_speed = %f\n", percent, x_speed);
 	float destX = interpolate(s1.screen.x, s2.screen.x, percent);// + interpolate(s1.scale, s2.scale, percent) * road_width * c.x / 2;
 	float destY = interpolate(s1.screen.y, s2.screen.y, percent);
 	float destW = w * interpolate(s1.scale, s2.scale, percent) * scale_to_car_k * player_scale;
@@ -186,20 +184,29 @@ void Game::render_player() {
 
 	destX += player.x * interpolate(s1.scale, s2.scale, percent) * road_width * width / player_scale;
 	destY -= destH;
-	s.setTextureRect(sf::IntRect(0, 0, w, h));
 
-	float k = 1;
+	printf("%f %f\n", cars[0]->position, player.position);
+	//printf("ssi = %d, destX = %f, destY = %f, destW = %f, destH = %f\n", start_segment_i, destX, destY, destW, destH);
+	
 	if (x_speed < 0) {
-		k = -1;
+		s.setTextureRect(sf::IntRect(w, 0, -w, h));
+	}
+	else {
+		s.setTextureRect(sf::IntRect(0, 0, w, h));
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+		s.setTextureRect(sf::IntRect(0, 0, w, h));
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+		s.setTextureRect(sf::IntRect(w, 0, -w, h));
 	}
 
-	s.setScale(k * destW / w, destH / h);
+	s.setScale(destW / w, destH / h);
 	s.setPosition(destX - destW / 2, destY);
 	window->draw(s);
 }
 
 void Game::render(sf::Event event) {
-
 	process_collisions();
 
 	window->draw(background);
