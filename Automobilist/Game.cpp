@@ -237,7 +237,7 @@ void Game::render(sf::Event event) {
 		segments[i % segments_buffer_size].draw_sprite(*window);
 
 		Segment s1 = segments[i % segments_buffer_size];
-		if ((i + 1) % segments_buffer_size == 0) continue;
+		if ((i + 1) % segments_buffer_size == 0 || (i + 1) == (start_segment_i + draw_distance)) continue;
 		Segment s2 = segments[(i + 1) % segments_buffer_size];
 
 
