@@ -18,24 +18,24 @@ void Segment::project(sf::Vector3f& camera) {
 }
 
 void Segment::draw_sprite(sf::RenderWindow& app) {
-	sf::Sprite s = sprite;
-	int w = s.getTextureRect().width;
-	int h = s.getTextureRect().height;
+	sf::Sprite decoration_sprite = sprite;
+	int w = decoration_sprite.getTextureRect().width;
+	int h = decoration_sprite.getTextureRect().height;
 
-	float destX = screen.x + scale * sprite_x * road_width / 2;
-	float destY = screen.y;
-	float destW = w * screen.z / 266;
-	float destH = h * screen.z / 266;
+	float destination_x = screen.x + scale * sprite_x * road_width / 2;
+	float destination_y = screen.y;
+	float destination_w = w * screen.z / 266;
+	float destination_h = h * screen.z / 266;
 
-	destX += destW * sprite_x;
-	destY -= destH;
+	destination_x += destination_w * sprite_x;
+	destination_y -= destination_h;
 
-	float clipH = destY + destH - clip;
-	if (clipH < 0) clipH = 0;
+	float clip_height = destination_y + destination_h - clip;
+	if (clip_height < 0) clip_height = 0;
 
-	if (clipH >= destH) return;
-	s.setTextureRect(sf::IntRect(0, 0, w, h - h * clipH / destH));
-	s.setScale(destW / w, destH / h);
-	s.setPosition(destX, destY);  
-	app.draw(s);
+	if (clip_height >= destination_h) return;
+	decoration_sprite.setTextureRect(sf::IntRect(0, 0, w, h - h * clip_height / destination_h));
+	decoration_sprite.setScale(destination_w / w, destination_h / h);
+	decoration_sprite.setPosition(destination_x, destination_y);  
+	app.draw(decoration_sprite);
 }

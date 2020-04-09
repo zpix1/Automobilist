@@ -15,6 +15,7 @@ float interpolate(float a, float b, float percent) {
 }
 
 bool overlap(float x1, float w1, float x2, float w2, float percent) {
+	printf("%f %f %f %f %f\n", x1, w1, x2, w2, percent);
 	float half = (percent) / 2;
 	float min1 = x1 - (w1 * half);
 	float max1 = x1 + (w1 * half);
