@@ -63,15 +63,16 @@ void Game::reset_cars() {
 
 	for (int i = 0; i < total_cars; i++) {
 		Car car;
-		car.x = randint(-1, 1) * 2.0 / 3.0;
-		car.position = 1000 * i * segment_length;
-		car.speed =  (30.0 + 0 * ((float)rand() / RAND_MAX));
+		car.x = (i % 3) * 0.2;
+		car.position = 10 * i * segment_length;
+		car.speed =  (350.0 + 0 * ((float)rand() / RAND_MAX));
 		car.sprite.setTexture(textures[1]);
 
 		std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
 
 		cars.push_back(ptr);
 		segments[find_segment_i(car.position)].cars.push_back(ptr);
+		printf("AAA\n");
 	}
 }
 
@@ -89,7 +90,7 @@ void Game::render_info() {
 	info_panel.setPosition(0, 0);
 	info_panel.setFont(main_font);
 	char info_text[200];
-	sprintf_s(info_text, "speed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f", camera_speed, max_speed, camera_position, camera_x);
+	sprintf_s(info_text, "speed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f\nsegment_i(cam): %d", camera_speed, max_speed, camera_position, camera_x, find_segment_i(camera_position));
 	info_panel.setString(info_text);
 	window->draw(info_panel);
 }
@@ -144,25 +145,30 @@ void Game::update_cars(float dt) {
 		c->position += c->speed;
 		Segment& s2 = segments[find_segment_i(c->position)];
 		s2.cars.push_back(c);
+
+		while (c->position >= segments_buffer_size * segment_length) c->position -= segments_buffer_size * segment_length;
+		while (c->position < 0) c->position += segments_buffer_size * segment_length;
 	}
 }
 
 void Game::process_collisions() {
 	Segment& s = segments[find_segment_i(camera_position)];
 
-	/*for (auto c : s.cars) {
-		if (speed >= c->speed)
-		if (overlap(player_x / road_width, 1, c->x, 1, 0.1)) {
-			printf("OVERLAP speed = %f car_speed = %f px=%f cx=%f\n", speed, c->speed, player_x / width, c->x);
-			
-			speed = 25;
+	for (auto c : cars) {
+		if (camera_speed >= c->speed && (fabs(player.position - c->position) < 100)) {
+			if (overlap(player.x, 1, c->x, 1, 0.1)) {
+				printf("OVERLAP speed = %f car_speed = %f px=%f cx=%f\n", player.speed, c->speed, player.x / width, c->x);
+
+				player.speed = camera_speed = 1;
+			}
 		}
-	}*/
+	}
 }
 
 void Game::update(float dt) {
 	process_keypress(dt);
 	update_cars(dt);
+	process_collisions();
 }
 
 void Game::render_player() {
@@ -219,12 +225,14 @@ void Game::render(sf::Event event) {
 	float segement_y_diff = segments[(start_segment_i + 1) % segments_buffer_size].world.y - segments[start_segment_i].world.y;
 	float segment_y_offset = segment_x_offset * segement_y_diff / segement_x_diff;
 
-	float camera_height = camera_height_offset + segments[start_segment_i].world.y + segment_y_offset;
 	float x = 0;
 	float dx = 0;
 	float max_y = height;
 
 	float segment_percent = get_segment_percent(camera_position);
+
+	segment_y_offset = interpolate(segments[start_segment_i].world.y, segments[(start_segment_i + 1) % segments_buffer_size].world.y, segment_percent);
+	float camera_height = camera_height_offset + segment_y_offset;
 
 	dx = -segments[start_segment_i].curve * segment_percent;
 
@@ -283,7 +291,6 @@ void Game::render(sf::Event event) {
 
 			if (clip_height < 0) clip_height = 0;
 			if (clip_height >= destH) continue;
-
 			s.setTextureRect(sf::IntRect(0, 0, w, h - h * clip_height / destH));
 			s.setScale(destW / w, destH / h);
 			s.setPosition(destX - destW / 2, destY);

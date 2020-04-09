@@ -32,5 +32,6 @@ int find_segment_i(float position) {
 }
 
 float get_segment_percent(float position) {
-	return (position - find_segment_i(position) * segment_length) / segment_length;
+	int i = (int)floor(position / segment_length);
+	return (position - i * segment_length) / segment_length;
 }
