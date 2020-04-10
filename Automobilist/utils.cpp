@@ -10,6 +10,36 @@ void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f s
 	window.draw(shape);
 }
 
+void draw_sprite(sf::RenderWindow& window, sf::Sprite sprite, Segment& s1, Segment& s2, float position, float x, float scale, bool mirrored) {
+	int w = sprite.getTextureRect().width;
+	int h = sprite.getTextureRect().height;
+
+	float percent = get_segment_percent(position);
+	float destination_x = interpolate(s1.screen.x, s2.screen.x, percent);// + interpolate(s1.scale, s2.scale, percent) * road_width * c.x / 2;
+	float destination_y = interpolate(s1.screen.y, s2.screen.y, percent);
+	float destination_w = w * interpolate(s1.scale, s2.scale, percent) * scale_to_car_k * scale;
+	float destination_h = h * interpolate(s1.scale, s2.scale, percent) * scale_to_car_k * scale;
+
+	destination_x += x * interpolate(s1.scale, s2.scale, percent) * road_width * width / scale;
+	destination_y -= destination_h;
+
+	float clip_height = destination_y + destination_h - s2.clip;
+
+	if (clip_height < 0) clip_height = 0;
+	if (clip_height >= destination_h) return;
+
+	if (mirrored) {
+		sprite.setTextureRect(sf::IntRect(w, 0, -w, h - h * clip_height / destination_h));
+	}
+	else {
+		sprite.setTextureRect(sf::IntRect(0, 0, w, h - h * clip_height / destination_h));
+	}
+
+	sprite.setScale(destination_w / w, destination_h / h);
+	sprite.setPosition(destination_x - destination_w / 2, destination_y);
+	window.draw(sprite);
+}
+
 float interpolate(float a, float b, float percent) {
 	return a + (b - a) * percent;
 }

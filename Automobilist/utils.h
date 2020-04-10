@@ -2,6 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "Segment.h"
+
 const float fps = 60.0;
 const float step = 1 / fps;
 const int width = 1024;
@@ -47,6 +49,9 @@ const int segments_buffer_size = 1600;
 const int total_textures = 3;
 
 void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f screen_bottom, sf::Color color);
+
+// Should be executed only after segments projections
+void draw_sprite(sf::RenderWindow& window, sf::Sprite sprite, Segment& s1, Segment& s2, float position, float x, float scale, bool mirrored);
 
 float interpolate(float a, float b, float percent);
 

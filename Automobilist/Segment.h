@@ -2,7 +2,6 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "utils.h"
 #include "Car.h"
 
 struct Segment {
@@ -21,6 +20,5 @@ struct Segment {
 
 	Segment();
 	void project(sf::Vector3f& camera);
-	void draw_sprite(sf::RenderWindow& app);
 };
 
