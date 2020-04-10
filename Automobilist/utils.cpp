@@ -45,7 +45,6 @@ float interpolate(float a, float b, float percent) {
 }
 
 bool overlap(float x1, float w1, float x2, float w2, float percent) {
-	printf("%f %f %f %f %f\n", x1, w1, x2, w2, percent);
 	float half = (percent) / 2;
 	float min1 = x1 - (w1 * half);
 	float max1 = x1 + (w1 * half);
@@ -65,4 +64,9 @@ int find_segment_i(float position) {
 float get_segment_percent(float position) {
 	int i = (int)floor(position / segment_length);
 	return (position - i * segment_length) / segment_length;
+}
+
+float get_lane_x(int lane_i) {
+	lane_i %= total_lanes;
+	return 2.0 / total_lanes * lane_i + 1.0 / total_lanes - 1.0;
 }

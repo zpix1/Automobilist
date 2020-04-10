@@ -18,7 +18,7 @@ void Game::load_textures() {
 		sf::Texture temp_texture;
 		textures.push_back(temp_texture);
 		if (!textures[i].loadFromFile("textures/" + std::to_string(i) + ".png")) {
-			printf("[ERROR] Can't load texture textures/%d.png", i);
+			fprintf(stderr, "[ERROR] Can't load texture textures/%d.png", i);
 		}
 	}
 
@@ -63,7 +63,7 @@ void Game::reset_cars() {
 
 	for (int i = 0; i < total_cars; i++) {
 		Car car;
-		car.x = (i % 3) * 0.2;
+		car.x = get_lane_x(i % 3);
 		car.position = 10 * i * segment_length;
 		car.speed =  (250.0 + 0 * ((float)rand() / RAND_MAX));
 		car.sprite.setTexture(textures[1]);
@@ -159,7 +159,6 @@ void Game::process_collisions() {
 			float car_w = c->sprite.getTextureRect().width * s.scale * scale_to_car_k * car_scale;
 
 			if (overlap(player.x * s.screen.z, player_w, c->x * s.screen.z, car_w, 1)) {
-				printf("OVERLAP speed = %f car_speed = %f px=%f cx=%f\n", player.speed, c->speed, player.x / width, c->x);
 
 				player.speed = camera_speed = 1;
 			}
@@ -238,6 +237,8 @@ void Game::render(sf::Event event) {
 
 		Segment s2 = segments[(i - 1) % segments_buffer_size];
 		
+		
+
 		// Grass
 		draw_quad(*window, sf::Vector3f(0, s1.screen.y, width), sf::Vector3f(0, s2.screen.y, width), (i / 3) % 2 ? grass1_color : grass2_color);
 
@@ -246,6 +247,33 @@ void Game::render(sf::Event event) {
 
 		// Segment
 		draw_quad(*window, s1.screen, s2.screen, (i / 3) % 2 ? road1_color : road2_color);
+
+		// Markup
+		if ((i / 3) % 2 == 0) {
+			float l1 = s1.screen.z * lane_width_k;
+			float l2 = s2.screen.z * lane_width_k;
+			float y1 = s1.screen.y;
+			float y2 = s2.screen.y;
+			float w1 = s1.screen.z;
+			float w2 = s2.screen.z;
+			float lanew1 = w1 * 2 / total_lanes;
+			float lanew2 = w2 * 2 / total_lanes;
+			float lanex1 = s1.screen.x - w1 + lanew1;
+			float lanex2 = s2.screen.x - w2 + lanew2;
+			for (int lane_i = 1; lane_i < total_lanes; lanex1 += lanew1, lanex2 += lanew2, lane_i++) {
+				sf::ConvexShape shape(4);
+				shape.setFillColor(lane_color);
+				shape.setPoint(0, sf::Vector2f(lanex1 - l1 / 2, y1));
+				shape.setPoint(1, sf::Vector2f(lanex1 + l1 / 2, y1));
+				shape.setPoint(2, sf::Vector2f(lanex2 + l2 / 2, y2));
+				shape.setPoint(3, sf::Vector2f(lanex2 - l2 / 2, y2));
+				window->draw(shape);
+			}
+
+			//draw_quad(*window, sf::Vector3f(s1.screen.x, s1.screen.y, s1.screen.z * lane_width_k), sf::Vector3f(s2.screen.x, s2.screen.y, s2.screen.z * lane_width_k), lane_color);
+		}
+
+
 	}
 
 	for (int i = start_segment_i + draw_distance; i > start_segment_i; i--) {

@@ -20,9 +20,12 @@ const sf::Color rumble2_color = sf::Color(0, 0, 0);
 const sf::Color grass1_color = sf::Color(16, 200, 16);
 const sf::Color grass2_color = sf::Color(0, 154, 0);
 
+const sf::Color lane_color = sf::Color(255, 255, 255);
+
 const float road_width = 3000.0;
 const float segment_length = 400.0;
 const float rumble_width_k = 1.1;
+const float lane_width_k = 0.03;
 const float camera_height_offset = 2500.0;
 const int draw_distance = 200;
 const float camera_depth = 0.84;
@@ -44,6 +47,8 @@ const float scale_to_car_k = 3000.0;
 
 const int total_cars = 100;
 
+const int total_lanes = 3;
+
 const int segments_buffer_size = 1600;
 
 const int total_textures = 3;
@@ -62,3 +67,5 @@ int randint(int min, int max);
 int find_segment_i(float position);
 
 float get_segment_percent(float position);
+
+float get_lane_x(int lane_i);
