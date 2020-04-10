@@ -63,7 +63,7 @@ void Game::reset_cars() {
 
 	for (int i = 0; i < total_cars; i++) {
 		Car car;
-		car.x = get_lane_x(i % 3);
+		car.x = get_lane_x(randint(0, total_lanes));
 		car.position = 10 * i * segment_length;
 		car.speed =  (250.0 + 0 * ((float)rand() / RAND_MAX));
 		car.sprite.setTexture(textures[1]);
@@ -249,7 +249,7 @@ void Game::render(sf::Event event) {
 		draw_quad(*window, s1.screen, s2.screen, (i / 3) % 2 ? road1_color : road2_color);
 
 		// Markup
-		if ((i / 3) % 2 == 0) {
+		if ((i / 6) % 2 == 0) {
 			float l1 = s1.screen.z * lane_width_k;
 			float l2 = s2.screen.z * lane_width_k;
 			float y1 = s1.screen.y;

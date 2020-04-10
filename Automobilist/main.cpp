@@ -31,7 +31,7 @@ int main() {
 
 		while (gdt > step) {
 			gdt = gdt - step;
-		
+			printf("fps: %f\r", 1.0f / gdt);
 			game.update(step);
 		
 		}
