@@ -27,7 +27,6 @@ const float segment_length = 400.0;
 const float rumble_width_k = 1.1;
 const float lane_width_k = 0.03;
 const float camera_height_offset = 2500.0;
-const int draw_distance = 200;
 const float camera_depth = 0.84;
 
 const float max_x_speed = 3000;
@@ -50,6 +49,7 @@ const int total_cars = 100;
 const int total_lanes = 3;
 
 const int segments_buffer_size = 1600;
+const int draw_distance = 300;
 
 const int total_textures = 3;
 

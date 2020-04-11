@@ -201,20 +201,15 @@ void Game::render(sf::Event event) {
 
 	render_info();
 
-	int start_segment_i = (int)ceil(camera_position / segment_length) % segments_buffer_size;
-
-	float segment_x_offset = camera_position - start_segment_i * segment_length;
-	float segement_x_diff = segments[(start_segment_i + 1) % segments_buffer_size].world.z - segments[start_segment_i].world.z;
-	float segement_y_diff = segments[(start_segment_i + 1) % segments_buffer_size].world.y - segments[start_segment_i].world.y;
-	float segment_y_offset = segment_x_offset * segement_y_diff / segement_x_diff;
+	int start_segment_i = (int)(camera_position / segment_length) % segments_buffer_size;
 
 	float x = 0;
 	float dx = 0;
 	float max_y = height;
-
+	  
 	float segment_percent = get_segment_percent(camera_position);
 
-	segment_y_offset = interpolate(segments[start_segment_i].world.y, segments[(start_segment_i + 1) % segments_buffer_size].world.y, segment_percent);
+	float segment_y_offset = interpolate(segments[start_segment_i].world.y, segments[(start_segment_i + 1) % segments_buffer_size].world.y, segment_percent);
 	float camera_height = camera_height_offset + segment_y_offset;
 
 	dx = -segments[start_segment_i].curve * segment_percent;
@@ -223,21 +218,19 @@ void Game::render(sf::Event event) {
 		Segment& s1 = segments[i % segments_buffer_size];
 		
 		sf::Vector3f camera(camera_x - x, camera_height, camera_position - (i >= segments_buffer_size ? segments_buffer_size * segment_length : 0));
-		
 		s1.project(camera);
 
 		x += dx;
 		dx += s1.curve;
 
 		s1.clip = max_y;
+
+		if (start_segment_i + 1 == i || start_segment_i == i) continue;
+
 		if (s1.screen.y >= max_y) continue;
 		max_y = s1.screen.y;
 
-		if (i < 1) continue;
-
-		Segment s2 = segments[(i - 1) % segments_buffer_size];
-		
-		
+		Segment s2 = segments[(i - 1 + segments_buffer_size) % segments_buffer_size];
 
 		// Grass
 		draw_quad(*window, sf::Vector3f(0, s1.screen.y, width), sf::Vector3f(0, s2.screen.y, width), (i / 3) % 2 ? grass1_color : grass2_color);
@@ -269,11 +262,7 @@ void Game::render(sf::Event event) {
 				shape.setPoint(3, sf::Vector2f(lanex2 - l2 / 2, y2));
 				window->draw(shape);
 			}
-
-			//draw_quad(*window, sf::Vector3f(s1.screen.x, s1.screen.y, s1.screen.z * lane_width_k), sf::Vector3f(s2.screen.x, s2.screen.y, s2.screen.z * lane_width_k), lane_color);
 		}
-
-
 	}
 
 	for (int i = start_segment_i + draw_distance; i > start_segment_i; i--) {

@@ -5,8 +5,9 @@
 int main() {
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
-	sf::RenderWindow window(sf::VideoMode(width, height), "Automobilist", sf::Style::Default, settings);
 	
+	sf::RenderWindow window(sf::VideoMode(width, height), "Automobilist", sf::Style::Default, settings);
+	window.setVerticalSyncEnabled(true);
 
 	Game game(&window);
 	sf::Clock clock;
@@ -31,9 +32,8 @@ int main() {
 
 		while (gdt > step) {
 			gdt = gdt - step;
-			printf("fps: %f\r", 1.0f / gdt);
+			//printf("fps: %f\r", 1.0f / gdt);
 			game.update(step);
-		
 		}
 		
 		last = now;
