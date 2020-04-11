@@ -26,6 +26,7 @@ class Game {
 	float camera_position = 0;
 	float camera_speed = 0;
 	float camera_x_speed = 0;
+	bool dont_change_pos = false;
 	
 
 	void load_textures();

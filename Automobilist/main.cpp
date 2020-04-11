@@ -7,13 +7,15 @@ int main() {
 	settings.antialiasingLevel = 8;
 	
 	sf::RenderWindow window(sf::VideoMode(width, height), "Automobilist", sf::Style::Default, settings);
+	window.setFramerateLimit(80);
 	window.setVerticalSyncEnabled(true);
+
 
 	Game game(&window);
 	sf::Clock clock;
+	sf::Clock clock_fps;
 	float last = clock.getElapsedTime().asMilliseconds();
 	float gdt = 0;
-
 #if (!DEBUG)
 	srand(time(NULL));
 #endif
@@ -32,13 +34,15 @@ int main() {
 
 		while (gdt > step) {
 			gdt = gdt - step;
-			//printf("fps: %f\r", 1.0f / gdt);
 			game.update(step);
 		}
 		
 		last = now;
 
 		game.render(event);
+
+		printf("%f\r", 1.0 / clock_fps.getElapsedTime().asSeconds());
+		clock_fps.restart();
 	}
 
 	return 0;
