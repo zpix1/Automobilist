@@ -4,8 +4,8 @@
 
 class Car {
 public:
-	float x, position;
-	float speed;
-	sf::Sprite sprite;
+    float x, position;
+    float speed;
+    sf::Sprite sprite;
 };
 

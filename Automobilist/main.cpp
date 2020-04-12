@@ -3,47 +3,62 @@
 #include "Game.h"
 
 int main() {
-	sf::ContextSettings settings;
-	settings.antialiasingLevel = 8;
-	
-	sf::RenderWindow window(sf::VideoMode(width, height), "Automobilist", sf::Style::Default, settings);
-	window.setFramerateLimit(80);
-	window.setVerticalSyncEnabled(true);
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
+    
+    sf::RenderWindow window(sf::VideoMode(window_width, window_height), "Automobilist", sf::Style::Default, settings);
+    window.setFramerateLimit(80);
+    window.setVerticalSyncEnabled(true);
 
 
-	Game game(&window);
-	sf::Clock clock;
-	sf::Clock clock_fps;
-	float last = clock.getElapsedTime().asMilliseconds();
-	float gdt = 0;
+    Game game(&window);
+    sf::Clock clock_fps;
+
 #if (!DEBUG)
-	srand(time(NULL));
+    srand(time(NULL));
 #endif
+    
 
-	while (window.isOpen()) {
-		sf::Event event;
-		while (window.pollEvent(event)) {
-			if (event.type == sf::Event::Closed) {
-				window.close();
-			}
-		}
+    /*while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
 
-		float now = clock.getElapsedTime().asMilliseconds();
-		float dt = std::min(1.f, (now - last) / 1000.0f);
-		gdt = gdt + dt;
+        while (clock_fps.getElapsedTime().asSeconds() > step) {
+            game.update(step);
+            clock_fps.restart();
+        }
+        game.render(event);
 
-		while (gdt > step) {
-			gdt = gdt - step;
-			game.update(step);
-		}
-		
-		last = now;
+        printf("%f\r", 1.0 / clock_fps.getElapsedTime().asSeconds());
+    }*/
 
-		game.render(event);
+    sf::Clock clock;
+    sf::Time accumulator = sf::Time::Zero;
+    sf::Time ups = sf::seconds(1.f / 60.f);
 
-		printf("%f\r", 1.0 / clock_fps.getElapsedTime().asSeconds());
-		clock_fps.restart();
-	}
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
 
-	return 0;
+        while (accumulator > ups) {
+            accumulator -= ups;
+            game.update(ups.asSeconds());
+        }
+
+        game.render(event);
+        int cFPS = 1 / clock.getElapsedTime().asSeconds();
+
+        printf("%d\n", (cFPS / 10) * 10);
+        accumulator += clock.restart();
+    }
+
+    return 0;
 }
