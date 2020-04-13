@@ -2,10 +2,10 @@
 
 #include <SFML/Graphics.hpp>
 
-class Car {
-public:
+struct Car {
     float x, position;
     float speed;
+    int lane_id;
     sf::Sprite sprite;
 };
 

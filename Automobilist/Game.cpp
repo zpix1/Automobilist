@@ -3,11 +3,11 @@
 #include <string>
 
 void Game::load_textures() {
-    if (!main_font.loadFromFile("./Xenogears.ttf")) {
+    if (!main_font.loadFromFile("./assets/Xenogears.ttf")) {
         fprintf(stderr, "[ERROR] Can't load font\n");
     }
 
-    if (!background_texture.loadFromFile("textures/sky.png")) {
+    if (!background_texture.loadFromFile("./assets/sky.png")) {
         fprintf(stderr, "[ERROR] Can't load background texture\n");
     }
 
@@ -17,7 +17,7 @@ void Game::load_textures() {
     for (int i = 0; i < total_textures; i++) {
         sf::Texture temp_texture;
         textures.push_back(temp_texture);
-        if (!textures[i].loadFromFile("textures/" + std::to_string(i) + ".png")) {
+        if (!textures[i].loadFromFile("./assets/" + std::to_string(i) + ".png")) {
             fprintf(stderr, "[ERROR] Can't load texture textures/%d.png", i);
         }
     }
@@ -31,26 +31,31 @@ void Game::fill_segments() {
 
         segment.world.z = i * segment_length;
 
-        // Add hills
-        if (i > 0) {
-            segment.world.y = sin((i) / 30.0) * 1500;
-        }
-        // Add curves
-        switch ((i / 300) % 3) {
-            case 0:
-                segment.curve = 3.0;
-                break;
-            case 1:
-                segment.curve = 3.0;
-                break;
-            case 2:
-                segment.curve = -5.7;
-                break;
-        }
-        // Add sprites
-        if (i % 10 == 0) {
-            segment.sprite_x = 1.0;
-            segment.sprite.setTexture(textures[2]);
+        //// Add hills
+        //if (i > 0) {
+        //    segment.world.y = sin((i) / 30.0) * 1500;
+        //}
+        //// Add curves
+        //switch ((i / 300) % 3) {
+        //    case 0:
+        //        segment.curve = 3.0;
+        //        break;
+        //    case 1:
+        //        segment.curve = 3.0;
+        //        break;
+        //    case 2:
+        //        segment.curve = -5.7;
+        //        break;
+        //}
+        //// Add sprites
+        //if (i % 10 == 0) {
+        //    segment.sprite_x = 1.0;
+        //    segment.sprite.setTexture(textures[2]);
+        //}
+
+        if (i == 100) {
+            segment.sprite_x = 1.5;
+            segment.sprite.setTexture(textures[0]);
         }
 
         segments.push_back(segment);
@@ -63,9 +68,13 @@ void Game::reset_cars() {
 
     for (int i = 0; i < total_cars; i++) {
         Car car;
-        car.x = get_lane_x(randint(0, total_lanes));
+        int lane_id = randint(0, total_lanes - 1);
+        car.lane_id = lane_id;
+        car.x = get_lane_x(lane_id) + 0.1 * ((((float)rand() / RAND_MAX)) - 0.5);
         car.position = 100 * i * segment_length;
-        car.speed =  (250.0 + 100 * ((float)rand() / RAND_MAX));
+        car.speed =  (200.0 + 150.0 * ((float)rand() / RAND_MAX));
+        if (lane_id == 0)
+            car.speed *= -1;
         car.sprite.setTexture(textures[1]);
 
         std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
@@ -89,7 +98,7 @@ void Game::render_info() {
     info_panel.setPosition(0, 0);
     info_panel.setFont(main_font);
     char info_text[200];
-    sprintf_s(info_text, "speed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f\nsegment_i(cam): %d", camera_speed, max_speed, camera_position, camera_x, find_segment_i(camera_position));
+    sprintf_s(info_text, "%.1f\nspeed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f\nsegment_i(cam): %d", fps, camera_speed, max_speed, camera_position, camera_x, find_segment_i(camera_position));
     info_panel.setString(info_text);
     window->draw(info_panel);
 }
@@ -181,10 +190,36 @@ void Game::process_collisions() {
     }
 }
 
+void Game::process_overtake(Car& car) {
+    int car_segment_id = find_segment_i(car.position);
+    Segment& car_segment = segments[car_segment_id];
+    
+    float car_w = car.sprite.getTextureRect().width * car_segment.scale * scale_to_car_k * car_scale;
+
+    for (int i = 0; i < 10; i++) {
+        int prev_segment_id = car_segment_id - i - 1 + segments_buffer_size;
+        Segment& prev_segment = segments[prev_segment_id % segments_buffer_size];
+
+        for (std::shared_ptr<Car>& prev_car: prev_segment.cars) {
+            float prev_car_w = prev_car->sprite.getTextureRect().width * car_segment.scale * scale_to_car_k * car_scale;
+            if (overlap(car.x * car_segment.screen.z, car_w, prev_car->x * car_segment.screen.z, prev_car_w, 1)) {
+                if (prev_car->lane_id == 2) {
+                    prev_car->lane_id = 1;
+                }
+                else if (prev_car->lane_id == 1) {
+                    prev_car->lane_id = 2;
+                }
+                prev_car->x = get_lane_x(prev_car->lane_id);
+            }
+        }
+    }
+}
+
 void Game::update(float dt) {
     process_keypress(dt);
     update_cars(dt);
     process_collisions();
+    process_overtake(player);
 }
 
 void Game::render_player() {
@@ -192,9 +227,8 @@ void Game::render_player() {
     player.position = camera_position + segment_length * 6;
 
     int start_segment_i = find_segment_i(player.position);
-
-    Segment s1 = segments[start_segment_i];
-    Segment s2 = segments[(start_segment_i + 1) % segments_buffer_size];
+    Segment& s1 = segments[start_segment_i];
+    Segment& s2 = segments[(start_segment_i + 1) % segments_buffer_size];
 
     bool mirrored = false;
     if (camera_x_speed < 0) {

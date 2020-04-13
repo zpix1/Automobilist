@@ -56,7 +56,8 @@ int main() {
         game.render(event);
         int cFPS = 1 / clock.getElapsedTime().asSeconds();
 
-        printf("%d\n", (cFPS / 10) * 10);
+        game.fps = cFPS;
+
         accumulator += clock.restart();
     }
 

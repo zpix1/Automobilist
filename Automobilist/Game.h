@@ -36,11 +36,14 @@ class Game {
     void process_keypress(float dt);
     void update_cars(float dt);
     void process_collisions();
+    void process_overtake(Car& car);
 
     void render_info();
     void render_player();
 
 public:
+    float fps;
+
     Game(sf::RenderWindow* w);
     void render(sf::Event event);
     void update(float dt);

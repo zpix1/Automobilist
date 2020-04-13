@@ -6,8 +6,8 @@
 
 const float fps = 60.0;
 const float step = 1.0 / fps;
-const int window_width = 1920;
-const int window_height = 1080;
+const int window_width = 1024;
+const int window_height = 768;
 
 const sf::Color background_color = sf::Color(135, 206, 250);
 
