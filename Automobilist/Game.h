@@ -1,12 +1,18 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 
 #include "Segment.h"
 #include "utils.h"
+
+struct TextureT {
+    sf::Texture texture;
+    std::string name;
+};
 
 class Game {
     sf::RenderWindow* window;
@@ -18,9 +24,11 @@ class Game {
     std::vector< std::shared_ptr<Car> > cars;
 
     sf::Texture background_texture;
-    std::vector<sf::Texture> textures;
+    std::vector<TextureT> textures;
 
     std::vector<Segment> segments;
+
+    std::vector<std::string> log;
 
     float camera_x = 0;
     float camera_position = 0;
@@ -37,10 +45,15 @@ class Game {
     void update_cars(float dt);
     void process_collisions();
     void process_overtake(Car& car);
+    void process_speed_limit();
 
     void render_info();
+    void render_log();
+    void add_to_log(std::string str);
     void render_player();
 
+
+    sf::Texture& get_texture(std::string name);
 public:
     float fps;
 

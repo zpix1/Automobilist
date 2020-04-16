@@ -17,24 +17,6 @@ int main() {
 #if (!DEBUG)
     srand(time(NULL));
 #endif
-    
-
-    /*while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
-        }
-
-        while (clock_fps.getElapsedTime().asSeconds() > step) {
-            game.update(step);
-            clock_fps.restart();
-        }
-        game.render(event);
-
-        printf("%f\r", 1.0 / clock_fps.getElapsedTime().asSeconds());
-    }*/
 
     sf::Clock clock;
     sf::Time accumulator = sf::Time::Zero;

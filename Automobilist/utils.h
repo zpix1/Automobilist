@@ -29,11 +29,11 @@ const float lane_width_k = 0.03;
 const float camera_height_offset = 2500.0;
 const float camera_depth = 0.84;
 
-const float max_x_speed = 1500;
+const float max_x_speed = 3500;
 const float max_speed = 500;
-const float acceleration_value = max_speed / 3;
+const float acceleration_value = max_speed / 10;
 const float breaking_value = max_speed;
-const float deceleration_value = max_speed / 7;
+const float deceleration_value = max_speed / 15;
 const float off_road_deceleration_value = max_speed / 1.3;
 const float off_road_max_speed = max_speed / 8;
 const float reverse_max_speed = max_speed / 8;
@@ -44,14 +44,16 @@ const float car_scale = player_scale;
 
 const float scale_to_car_k = 3000.0;
 
-const int total_cars = 200;
+const int total_cars = 50;
 
 const int total_lanes = 3;
 
-const int segments_buffer_size = 1600;
+const int segments_buffer_size = 2000;
 const int draw_distance = 300;
 
-const int total_textures = 3;
+const float speed_to_screen = 0.25;
+
+const int total_textures = 7;
 
 void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f screen_bottom, sf::Color color);
 

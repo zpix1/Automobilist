@@ -8,6 +8,7 @@ struct Segment {
     float scale;
     float curve;
     float sprite_x, clip;
+    float speed_limit;
     sf::Sprite sprite;
 
     // X, Y, Z
