@@ -31,6 +31,7 @@ const float camera_depth = 0.84;
 
 const float max_x_speed = 3500;
 const float max_speed = 500;
+const float max_car_speed = 400;
 const float acceleration_value = max_speed / 10;
 const float breaking_value = max_speed;
 const float deceleration_value = max_speed / 15;
@@ -44,11 +45,11 @@ const float car_scale = player_scale;
 
 const float scale_to_car_k = 3000.0;
 
-const int total_cars = 50;
+const int total_cars = 400;
 
 const int total_lanes = 3;
 
-const int segments_buffer_size = 2000;
+const int segments_buffer_size = 6150;
 const int draw_distance = 300;
 
 const float speed_to_screen = 0.25;

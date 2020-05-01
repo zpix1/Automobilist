@@ -117,7 +117,9 @@ void Game::reset_cars() {
         car.lane_id = lane_id;
         car.x = get_lane_x(lane_id) + 0.1 * ((((float)rand() / RAND_MAX)) - 0.5);
         car.position = 100 * i * segment_length;
-        car.speed =  (200.0 + 150.0 * ((float)rand() / RAND_MAX));
+        car.speed =  (max_car_speed - 150.0 * ((float)rand() / RAND_MAX));
+        car.max_speed = car.speed;
+
         car.sprite.setTexture(get_texture("bluecar"));
 
         std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
@@ -149,7 +151,7 @@ void Game::render_info() {
 void Game::add_to_log(std::string str) {
     log.push_back(str);
 
-    if (log.size() == 11) {
+    if (log.size() > 10) {
         log.erase(log.begin());
     }
 }
@@ -215,8 +217,15 @@ void Game::process_keypress(float dt) {
 void Game::update_cars(float dt) {
     for (auto c : cars) {
         Segment& s1 = segments[find_segment_i(c->position)];
+        float s1_speed_limit = s1.speed_limit;
         auto to_delete = std::find(s1.cars.begin(), s1.cars.end(), c);
         s1.cars.erase(to_delete);
+
+        /*for (auto near_car : s1.cars) {
+            if (near_car != c && near_car->speed < c->speed && overlap(c->x * s1.screen.z, c->sprite.getTextureRect().width, near_car->x * s1.screen.z, near_car->sprite.getTextureRect().width, 1)) {
+                c->speed = 25;
+            }
+        }*/
         
         c->position += c->speed;
 
@@ -224,7 +233,44 @@ void Game::update_cars(float dt) {
         while (c->position < 0) c->position += segments_buffer_size * segment_length;
 
         Segment& s2 = segments[find_segment_i(c->position)];
+        float s2_speed_limit = s2.speed_limit;
+
         s2.cars.push_back(c);
+
+        // To avoid collisions
+        for (auto near_car : s2.cars) {
+            if (near_car != c && near_car->speed < c->speed && c->position <= near_car->position && overlap(c->x * s2.screen.z, c->sprite.getTextureRect().width, near_car->x * s2.screen.z, near_car->sprite.getTextureRect().width, 1)) {
+                bool found = false;
+                if (!(rand() % 3)) {
+                    for (int lane_id = 0; lane_id < total_lanes; lane_id++) {
+                        if (abs(lane_id - c->lane_id) == 1)
+                        if (!overlap(get_lane_x(lane_id) * s2.screen.z, c->sprite.getTextureRect().width, near_car->x * s2.screen.z, near_car->sprite.getTextureRect().width, 1)) {
+                            c->x = get_lane_x(lane_id);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) {
+                    c->speed = near_car->speed * 0.8;
+                }
+            }
+        }
+
+        // To respect speed limits
+        if (s1_speed_limit != s2_speed_limit) {
+            if (s2_speed_limit != INFINITY) {
+                c->speed = s2_speed_limit - ((float)rand() / RAND_MAX) * 0.2 * s2_speed_limit;
+            }
+            else {
+                c->speed = c->max_speed;
+            }
+        }
+
+        // To be fast
+        if (c->speed < s2.speed_limit) {
+            c->speed = std::min(c->speed + 1.0f, c->max_speed);
+        }
     }
 }
 
@@ -281,13 +327,13 @@ void Game::process_overtake(Car& car) {
 }
 
 void Game::process_speed_limit() {
-    if (segments[find_segment_i(player.position)].speed_limit * 1.2 <= camera_speed) {
+    /*if (segments[find_segment_i(player.position)].speed_limit * 1.2 <= camera_speed) {
         char exp[100];
         sprintf_s(exp, "you failed speed limit, %.1f > %.1f", camera_speed * speed_to_screen, segments[find_segment_i(player.position)].speed_limit * speed_to_screen);
         camera_speed = segments[find_segment_i(player.position)].speed_limit * 0.8;
         std::string s = exp;
         add_to_log(s);
-    }
+    }*/
 }
 
 void Game::update(float dt) {
