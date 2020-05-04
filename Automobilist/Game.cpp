@@ -1,18 +1,19 @@
 #include "Game.h"
 
 #include <string>
+#include <algorithm>
 
 void Game::load_textures() {
     if (!main_font.loadFromFile("./assets/Xenogears.ttf")) {
         fprintf(stderr, "[ERROR] Can't load font\n");
     }
     
-    std::vector<std::string> tnames = { "bluecar", "palm", "20sign", "60sign", "70sign", "120sign", "xsign", "sky" };
+    std::vector<std::string> tnames = { "bluecar", "palm", "20sign", "60sign", "70sign", "120sign", "xsign", "sky", "0stars", "1stars", "2stars", "3stars", "4stars", "5stars" };
     for (int i = 0; i < tnames.size(); i++) {
         TextureT temp_texture;
         
         if (!temp_texture.texture.loadFromFile("./assets/" + tnames[i] + ".png")) {
-            fprintf(stderr, "[ERROR] Can't load texture textures/%d.png", i);
+            fprintf(stderr, "[ERROR] Can't load texture textures/%s.png", tnames[i].c_str());
         }
 
         temp_texture.name = tnames[i];
@@ -35,22 +36,19 @@ sf::Texture& Game::get_texture(std::string name) {
 void Game::fill_segments() {
     int global_i = 0;
     const int length_k = 3;
-    struct mapseg {
-        int length;
-        float speed_limit;
-        std::string texture_name;
-        float curve;
-    } map[] {
-        {50, INFINITY, "xsign", 4.5},
-        {300, 60, "60sign", 0.5},
-        {600, INFINITY, "xsign", 0},
-        {300, 60, "60sign", -3.0},
-        {600, 120, "120sign", -4},
-        {200, 20, "20sign", -0.3}
-    };
+    //              length  length_p speed_l    sign         curve    failed (false)
+    map.push_back({ 50,     50,       INFINITY,  "xsign",     4.5,     false });
+    map.push_back({ 300,    350,      60,        "60sign",    0.5,     false });
+    map.push_back({ 600,    950,     INFINITY,  "xsign",     0,       false });
+    map.push_back({ 300,    1250,     60,        "60sign",    -3.0,    false });
+    map.push_back({ 600,    1850,    120,       "120sign",   -4,      false });
+    map.push_back({ 200,    2050,    20,        "20sign",    -0.3,    false });
 
-    for (int i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
-        for (int j = 0; j < map[i].length * length_k; j++, global_i++) {
+    for (int i = 0; i < map.size(); i++) {
+        map[i].length *= length_k;
+        map[i].length_prefix *= length_k;
+
+        for (int j = 0; j < map[i].length; j++, global_i++) {
             Segment segment;
             segment.world.z = global_i * segment_length;
             segment.speed_limit = map[i].speed_limit / speed_to_screen;
@@ -170,6 +168,14 @@ void Game::render_log() {
     window->draw(info_panel);
 }
 
+void Game::render_stars() {
+    sf::Sprite stars;
+    stars.setTexture(get_texture(std::to_string(stars_count) + "stars"));
+    stars.setPosition(window_width - 310, 0);
+    stars.setScale(0.2, 0.2);
+    window->draw(stars);
+}
+
 void Game::process_keypress(float dt) {
     camera_x_speed = 2.0 * (camera_speed / max_speed) * max_x_speed;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
@@ -216,32 +222,45 @@ void Game::process_keypress(float dt) {
 
 void Game::update_cars(float dt) {
     for (auto c : cars) {
-        Segment& s1 = segments[find_segment_i(c->position)];
-        float s1_speed_limit = s1.speed_limit;
-        auto to_delete = std::find(s1.cars.begin(), s1.cars.end(), c);
-        s1.cars.erase(to_delete);
+        Segment* car_segment_ptr = nullptr;
+        float s1_speed_limit, s2_speed_limit;
+        if (find_segment_i(c->position) != find_segment_i(c->position + c->speed)) {
+            Segment& s1 = segments[find_segment_i(c->position)];
+            s1_speed_limit = s1.speed_limit;
+            auto to_delete = std::find(s1.cars.begin(), s1.cars.end(), c);
+            s1.cars.erase(to_delete);
 
-        /*for (auto near_car : s1.cars) {
-            if (near_car != c && near_car->speed < c->speed && overlap(c->x * s1.screen.z, c->sprite.getTextureRect().width, near_car->x * s1.screen.z, near_car->sprite.getTextureRect().width, 1)) {
-                c->speed = 25;
-            }
-        }*/
+            /*for (auto near_car : s1.cars) {
+                if (near_car != c && near_car->speed < c->speed && overlap(c->x * s1.screen.z, c->sprite.getTextureRect().width, near_car->x * s1.screen.z, near_car->sprite.getTextureRect().width, 1)) {
+                    c->speed = 25;
+                }
+            }*/
+
+            c->position += c->speed;
+
+            while (c->position >= segments_buffer_size * segment_length) c->position -= segments_buffer_size * segment_length;
+            while (c->position < 0) c->position += segments_buffer_size * segment_length;
+
+            Segment& s2 = segments[find_segment_i(c->position)];
+            s2_speed_limit = s2.speed_limit;
+
+            s2.cars.push_back(c);
+            car_segment_ptr = &s2;
+        }
+        else {
+            c->position += c->speed;
+            Segment& s2 = segments[find_segment_i(c->position)];
+            s1_speed_limit = s2_speed_limit = s2.speed_limit;
+            car_segment_ptr = &s2;
+        }
+
+        Segment& s2 = *car_segment_ptr;
         
-        c->position += c->speed;
-
-        while (c->position >= segments_buffer_size * segment_length) c->position -= segments_buffer_size * segment_length;
-        while (c->position < 0) c->position += segments_buffer_size * segment_length;
-
-        Segment& s2 = segments[find_segment_i(c->position)];
-        float s2_speed_limit = s2.speed_limit;
-
-        s2.cars.push_back(c);
-
         // To avoid collisions
         for (auto near_car : s2.cars) {
             if (near_car != c && near_car->speed < c->speed && c->position <= near_car->position && overlap(c->x * s2.screen.z, c->sprite.getTextureRect().width, near_car->x * s2.screen.z, near_car->sprite.getTextureRect().width, 1)) {
                 bool found = false;
-                if (!(rand() % 3)) {
+                if (1) {
                     for (int lane_id = 0; lane_id < total_lanes; lane_id++) {
                         if (abs(lane_id - c->lane_id) == 1)
                         if (!overlap(get_lane_x(lane_id) * s2.screen.z, c->sprite.getTextureRect().width, near_car->x * s2.screen.z, near_car->sprite.getTextureRect().width, 1)) {
@@ -327,13 +346,14 @@ void Game::process_overtake(Car& car) {
 }
 
 void Game::process_speed_limit() {
-    /*if (segments[find_segment_i(player.position)].speed_limit * 1.2 <= camera_speed) {
-        char exp[100];
-        sprintf_s(exp, "you failed speed limit, %.1f > %.1f", camera_speed * speed_to_screen, segments[find_segment_i(player.position)].speed_limit * speed_to_screen);
-        camera_speed = segments[find_segment_i(player.position)].speed_limit * 0.8;
-        std::string s = exp;
-        add_to_log(s);
-    }*/
+    if (segments[find_segment_i(player.position)].speed_limit * 1.2 <= camera_speed) {
+        auto found_ptr = std::lower_bound(map.begin(), map.end(), find_segment_i(player.position), [](MapSegment& a, int d) -> bool { return a.length_prefix < d; });
+        printf("dd= %d\n", found_ptr - map.begin());
+        if (!found_ptr->speed_limit_failed) {
+            stars_count = std::min(stars_count + 1, 5);
+            found_ptr->speed_limit_failed = true;
+        }
+    }
 }
 
 void Game::update(float dt) {
@@ -372,6 +392,7 @@ void Game::render(sf::Event event) {
 
     render_info();
     render_log();
+    render_stars();
 
     int start_segment_i = (int)(camera_position / segment_length) % segments_buffer_size;
 

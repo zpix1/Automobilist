@@ -14,6 +14,15 @@ struct TextureT {
     std::string name;
 };
 
+struct MapSegment {
+    int length;
+    int length_prefix;
+    float speed_limit;
+    std::string texture_name;
+    float curve;
+    bool speed_limit_failed;
+};
+
 class Game {
     sf::RenderWindow* window;
     sf::Font main_font;
@@ -35,8 +44,9 @@ class Game {
     float camera_speed = 0;
     float camera_x_speed = 0;
     bool dont_change_pos = false;
-    
 
+    int stars_count = 0;
+    
     void load_textures();
     void fill_segments();
     void reset_cars();
@@ -49,9 +59,11 @@ class Game {
 
     void render_info();
     void render_log();
+    void render_stars();
     void add_to_log(std::string str);
     void render_player();
 
+    std::vector<MapSegment> map;
 
     sf::Texture& get_texture(std::string name);
 public:
