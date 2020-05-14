@@ -27,6 +27,8 @@ struct MapSegment {
 };
 
 class Game {
+    sf::Clock timer;
+
     sf::RenderWindow* window;
     sf::Font main_font;
 
@@ -49,6 +51,8 @@ class Game {
     bool dont_change_pos = false;
 
     int stars_count = 0;
+
+    int lap_count = 0;
     
     void load_textures();
     void fill_segments();
@@ -66,7 +70,7 @@ class Game {
     void add_to_log(std::string str);
     void render_player();
     void process_won();
-
+    void process_time();
     void add_star();
 
     std::vector<MapSegment> map;

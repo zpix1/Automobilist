@@ -8,12 +8,12 @@ void Game::render_start_info() {
     sf::Text info_panel;
     info_panel.setCharacterSize(40);
     info_panel.setFillColor(sf::Color::White);
-    info_panel.setPosition(0, 0);
+    info_panel.setPosition(100, 100);
     info_panel.setFont(main_font);
     char info_text[] = \
         "Welcome to Automobilist!\n"
         "It is your last chance to pass a driving exam\n"
-        "if you fail it this time\nyou never get a driver license again\n"
+        "if you fail it this time\nyou will never get a driver license again\n"
         "Pull yourself together, you hear me??\n\n"
         "You have to get it done in 5 minutes\n  and with no more than 5 errors (stars)\n"
         "Press space to continue, good luck!";
@@ -27,7 +27,7 @@ void Game::render_won_info() {
     sf::Text info_panel;
     info_panel.setCharacterSize(40);
     info_panel.setFillColor(sf::Color::White);
-    info_panel.setPosition(0, 0);
+    info_panel.setPosition(window_width / 2 - 100, window_height / 2 - 50);
     info_panel.setFont(main_font);
     char info_text[] = \
         "You won!\n Well done!";
@@ -41,7 +41,7 @@ void Game::render_lost_info() {
     sf::Text info_panel;
     info_panel.setCharacterSize(40);
     info_panel.setFillColor(sf::Color::White);
-    info_panel.setPosition(0, 0);
+    info_panel.setPosition(window_width / 2 - 100, window_height / 2 - 50);
     info_panel.setFont(main_font);
     char info_text[] = \
         "You lost!\n As usual...";
@@ -208,6 +208,7 @@ void Game::reset_cars() {
 Game::Game(sf::RenderWindow* w, int* r_ptr) {
     result_ptr = r_ptr;
     window = w;
+    timer.restart();
     load_textures();
     fill_segments();
     reset_cars();
@@ -220,7 +221,7 @@ void Game::render_info() {
     info_panel.setPosition(0, 0);
     info_panel.setFont(main_font);
     char info_text[200];
-    sprintf_s(info_text, "%.1f\nspeed: %0.0fkm/s", fps, camera_speed * speed_to_screen, max_speed, camera_position, camera_x, find_segment_i(camera_position), stars_count);
+    sprintf_s(info_text, "%.1f\nspeed: %0.0fkm/s\n%d:%.2d\n%d/%d", fps, camera_speed * speed_to_screen, (int)timer.getElapsedTime().asSeconds() / 60, (int)timer.getElapsedTime().asSeconds() % 60, lap_count + 1, laps_to_win);
     info_panel.setString(info_text);
     window->draw(info_panel);
 }
@@ -237,10 +238,10 @@ void Game::render_log() {
     sf::Text info_panel;
     info_panel.setCharacterSize(20);
     info_panel.setFillColor(sf::Color(0, 0, 0));
-    info_panel.setPosition(window_width - 300, 0);
+    info_panel.setPosition(window_width - 310, 70);
     info_panel.setFont(main_font);
     std::string info_text;
-    for (int i = log.size() - 10; i < log.size(); i++) {
+    for (int i = 0; i < log.size(); i++) {
         info_text += log[i] + "\n";
     }
     info_panel.setString(info_text);
@@ -373,6 +374,9 @@ void Game::update_cars(float dt) {
 }
 
 void Game::add_star() {
+    if (stars_count == 4) {
+        add_to_log("Bamboozle! I give you a chance");
+    }
     if (stars_count == 5) {
         *result_ptr = 1;
     }
@@ -390,6 +394,7 @@ void Game::process_collisions() {
 
             if (overlap(player.x * s.screen.z, player_w, c->x * s.screen.z, car_w, 1)) {
                 player.speed = camera_speed = 25;
+                add_to_log("You broke a car (+1)");
                 add_star();
             }
         }
@@ -399,8 +404,10 @@ void Game::process_collisions() {
         if (sprite_w)
         if (overlap(player.x * s.screen.z, player_w, s.sprite_x * s.screen.z, sprite_w, 1)) {
             player.speed = camera_speed = 25;
-            if (!dont_change_pos)
+            if (!dont_change_pos) {
+                add_to_log("You broke a decoration (+1)");
                 add_star();
+            }
             dont_change_pos = true;
         }
         else {
@@ -439,6 +446,8 @@ void Game::process_speed_limit() {
         auto found_ptr = std::lower_bound(map.begin(), map.end(), find_segment_i(player.position) + 1, [](MapSegment& a, int d) -> bool { return a.length_prefix < d; });
         if (!found_ptr->speed_limit_failed) {
             add_star();
+
+            add_to_log("You failed speed limit (+1)");
             found_ptr->speed_limit_failed = true;
         }
     }
@@ -452,8 +461,17 @@ void Game::update(float dt) {
     process_speed_limit();
 }
 
+void Game::process_time() {
+    if (timer.getElapsedTime().asSeconds() > max_seconds) {
+        *result_ptr = 1;
+    }
+}
+
 void Game::process_won() {
-    if (find_segment_i(camera_position + 5 * segment_length) <= 4) {
+    if (find_segment_i(camera_position + 5 * segment_length) == 0) {
+        lap_count++;
+    }
+    if (lap_count >= laps_to_win) {
         *result_ptr = 2;
     }
 }
@@ -484,9 +502,8 @@ void Game::render(sf::Event event) {
 
     window->draw(background);
 
-    render_info();
-    render_log();
-    render_stars();
+    process_won();
+    process_time();
 
     int start_segment_i = (int)(camera_position / segment_length) % segments_buffer_size;
 
@@ -570,9 +587,11 @@ void Game::render(sf::Event event) {
     }
 
     render_player();
+    
+    render_info();
+    render_log();
+    render_stars();
 
     window->display();
-
-
     process_collisions();
 }

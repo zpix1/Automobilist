@@ -45,7 +45,7 @@ const float car_scale = player_scale;
 
 const float scale_to_car_k = 3000.0;
 
-const int total_cars = 50;
+const int total_cars = 200;
 
 const int total_lanes = 3;
 
@@ -55,6 +55,10 @@ const int draw_distance = 500;
 const float speed_to_screen = 0.25;
 
 const int total_textures = 7;
+
+const int max_seconds = 300;
+
+const int laps_to_win = 2;
 
 void draw_quad(sf::RenderWindow& window, sf::Vector3f screen_top, sf::Vector3f screen_bottom, sf::Color color);
 
