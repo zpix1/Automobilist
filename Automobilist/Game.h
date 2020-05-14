@@ -18,9 +18,12 @@ struct MapSegment {
     int length;
     int length_prefix;
     float speed_limit;
-    std::string texture_name;
+    std::string sign_name;
     float curve;
+    float height;
     bool speed_limit_failed;
+    std::string texture_name;
+    int texture_freq;
 };
 
 class Game {
@@ -62,14 +65,23 @@ class Game {
     void render_stars();
     void add_to_log(std::string str);
     void render_player();
+    void process_won();
+
+    void add_star();
 
     std::vector<MapSegment> map;
 
     sf::Texture& get_texture(std::string name);
 public:
+    int* result_ptr;
+
     float fps;
 
-    Game(sf::RenderWindow* w);
+    void render_start_info();
+    void render_won_info();
+    void render_lost_info();
+
+    Game(sf::RenderWindow* w, int* result);
     void render(sf::Event event);
     void update(float dt);
 };

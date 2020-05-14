@@ -3,17 +3,69 @@
 #include <string>
 #include <algorithm>
 
+void Game::render_start_info() {
+    window->clear(sf::Color::Black);
+    sf::Text info_panel;
+    info_panel.setCharacterSize(40);
+    info_panel.setFillColor(sf::Color::White);
+    info_panel.setPosition(0, 0);
+    info_panel.setFont(main_font);
+    char info_text[] = \
+        "Welcome to Automobilist!\n"
+        "It is your last chance to pass a driving exam\n"
+        "if you fail it this time\nyou never get a driver license again\n"
+        "Pull yourself together, you hear me??\n\n"
+        "You have to get it done in 5 minutes\n  and with no more than 5 errors (stars)\n"
+        "Press space to continue, good luck!";
+    info_panel.setString(info_text);
+    window->draw(info_panel);
+    window->display();
+}
+
+void Game::render_won_info() {
+    window->clear(sf::Color::Black);
+    sf::Text info_panel;
+    info_panel.setCharacterSize(40);
+    info_panel.setFillColor(sf::Color::White);
+    info_panel.setPosition(0, 0);
+    info_panel.setFont(main_font);
+    char info_text[] = \
+        "You won!\n Well done!";
+    info_panel.setString(info_text);
+    window->draw(info_panel);
+    window->display();
+}
+
+void Game::render_lost_info() {
+    window->clear(sf::Color::Black);
+    sf::Text info_panel;
+    info_panel.setCharacterSize(40);
+    info_panel.setFillColor(sf::Color::White);
+    info_panel.setPosition(0, 0);
+    info_panel.setFont(main_font);
+    char info_text[] = \
+        "You lost!\n As usual...";
+    info_panel.setString(info_text);
+    window->draw(info_panel);
+    window->display();
+}
+
 void Game::load_textures() {
     if (!main_font.loadFromFile("./assets/Xenogears.ttf")) {
         fprintf(stderr, "[ERROR] Can't load font\n");
     }
     
-    std::vector<std::string> tnames = { "bluecar", "palm", "20sign", "60sign", "70sign", "120sign", "xsign", "sky", "0stars", "1stars", "2stars", "3stars", "4stars", "5stars" };
+    std::vector<std::string> tnames = { 
+        "bluecar", "palm", "20sign", "60sign", "70sign", "120sign", "xsign", "sky",
+        "0stars", "1stars", "2stars", "3stars", "4stars", "5stars",
+        "1car", "2car", "3car", "4car",
+        "wall", "cactus", "palm_tree"
+    };
     for (int i = 0; i < tnames.size(); i++) {
         TextureT temp_texture;
         
         if (!temp_texture.texture.loadFromFile("./assets/" + tnames[i] + ".png")) {
-            fprintf(stderr, "[ERROR] Can't load texture textures/%s.png", tnames[i].c_str());
+            fprintf(stderr, "[ERROR] Can't load texture textures: %s.png", tnames[i].c_str());
         }
 
         temp_texture.name = tnames[i];
@@ -34,35 +86,90 @@ sf::Texture& Game::get_texture(std::string name) {
 }
 
 void Game::fill_segments() {
-    int global_i = 0;
     const int length_k = 3;
-    //              length  length_p speed_l    sign         curve    failed (false)
-    map.push_back({ 50,     50,       INFINITY,  "xsign",     4.5,     false });
-    map.push_back({ 300,    350,      60,        "60sign",    0.5,     false });
-    map.push_back({ 600,    950,     INFINITY,  "xsign",     0.7,       false });
-    map.push_back({ 300,    1250,     60,        "60sign",    -3.0,    false });
-    map.push_back({ 600,    1850,    120,       "120sign",   -4,      false });
-    map.push_back({ 200,    2050,    20,        "20sign",    -0.3,    false });
+    //              length  length_p speed_l    sign          curve     height  failed (false)  tm          tf
+    map.push_back({ 50,     50,      INFINITY,  "xsign",      4.5,      100,    false,           "",        11  });
+    map.push_back({ 300,    350,     60,        "60sign",     0.5,      200,    false,          "palm",     15  });
+    map.push_back({ 600,    950,     INFINITY,  "xsign",      0.7,      0,      false,          "cactus",   31  });
+    map.push_back({ 300,    1250,    60,        "60sign",     2.0,      200,    false,          "palm_tree",21  });
+    map.push_back({ 600,    1850,    120,       "120sign",   -1,        150,    false,           "",        10  });
+    map.push_back({ 200,    2050,    20,        "20sign",    -4,        0,      false,          "wall",     3   });
+    
+    std::vector< std::pair<int, float> > heights;
+    
+    heights.push_back({ 0, 60.f });
+    heights.push_back({ 250, 30.f });
+    heights.push_back({ 400, 40.f });
+    heights.push_back({ 500, 25.f });
+    heights.push_back({ 600, 10.f });
+    heights.push_back({ 750, 30.f });
+    heights.push_back({ 850, 10.f });
+    heights.push_back({ 1000, 0.f });
+    heights.push_back({ 1100, 25.f });
+    heights.push_back({ 1200, 5.f });
+    heights.push_back({ 1300, 0.f });
+    heights.push_back({ 1400, 60.f });
+    heights.push_back({ 1600, 20.f });
+    heights.push_back({ 1800, 60.f });
+    heights.push_back({ 1900, 40.f });
+    heights.push_back({ 2000, 60.f });
+    heights.push_back({ 2050, 60.f });
 
+    for (int i = 0; i < heights.size(); i++) {
+        heights[i].first *= length_k;
+    }
+
+    // Recalculate prefixes
     int acc = 0;
     for (int i = 0; i < map.size(); i++) {
+        map[i].length *= length_k;
         acc += map[i].length;
         map[i].length_prefix = acc;
     }
 
-    for (int i = 0; i < map.size(); i++) {
-        map[i].length *= length_k;
-        map[i].length_prefix *= length_k;
+    int global_i = 0;
 
+    int hmi = 0;
+    int hmx;
+    int hmdx;
+    float hmy;
+    float hmdy;
+
+    for (int i = 0; i < map.size(); i++) {
         for (int j = 0; j < map[i].length; j++, global_i++) {
+            if (heights[hmi].first < global_i || global_i == 0) {
+                hmx = heights[hmi].first;
+                hmy = heights[hmi].second;
+                hmi++;
+                hmdx = heights[hmi].first - heights[hmi - 1].first;
+                hmdy = heights[hmi].second - heights[hmi - 1].second;
+            }
+
             Segment segment;
+
             segment.world.z = global_i * segment_length;
             segment.speed_limit = map[i].speed_limit / speed_to_screen;
             segment.curve = map[i].curve;
-            segment.world.y = segment.world.y = sin((global_i) / 30.0) * 1500;
+
+            float t = (global_i - hmx) / (float)hmdx;
+
+            segment.world.y = hmy + hmdy * pbend(t);
+
+            segment.world.y *= 800;
+            
             if (j == 0) {
                 segment.sprite_x = 1.5;
-                segment.sprite.setTexture(get_texture(map[i].texture_name));
+                segment.sprite.setTexture(get_texture(map[i].sign_name));
+            }
+            else if (map[i].texture_name.size() != 0 && global_i % map[i].texture_freq == 0) {
+                if (global_i % 2 == 0) {
+                    segment.sprite_x = -1.5;
+                    segment.sprite.setTexture(get_texture(map[i].texture_name));
+                }
+                else {
+                    segment.sprite_x = 1.5;
+                    segment.sprite.setTexture(get_texture(map[i].texture_name));
+                }
             }
             segments.push_back(segment);
         }
@@ -79,11 +186,17 @@ void Game::reset_cars() {
         
         car.lane_id = lane_id;
         car.x = get_lane_x(lane_id) + 0.1 * ((((float)rand() / RAND_MAX)) - 0.5);
-        car.position = 100 * i * segment_length;
+        car.position = 30 * i * segment_length;
         car.speed =  (max_car_speed - 150.0 * ((float)rand() / RAND_MAX));
         car.max_speed = car.speed;
 
-        car.sprite.setTexture(get_texture("bluecar"));
+        int sprite_id = randint(1, 4);
+
+        if (sprite_id <= 2) {
+            car.max_speed += 50;
+        }
+
+        car.sprite.setTexture(get_texture(std::to_string(sprite_id) + "car"));
 
         std::shared_ptr<Car> ptr = std::make_shared<Car>(car);
 
@@ -92,7 +205,8 @@ void Game::reset_cars() {
     }
 }
 
-Game::Game(sf::RenderWindow* w) {
+Game::Game(sf::RenderWindow* w, int* r_ptr) {
+    result_ptr = r_ptr;
     window = w;
     load_textures();
     fill_segments();
@@ -106,7 +220,7 @@ void Game::render_info() {
     info_panel.setPosition(0, 0);
     info_panel.setFont(main_font);
     char info_text[200];
-    sprintf_s(info_text, "%.1f\nspeed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f\nsegment_i(cam): %d\nsc: %d\n", fps, camera_speed * speed_to_screen, max_speed, camera_position, camera_x, find_segment_i(camera_position), stars_count);
+    sprintf_s(info_text, "%.1f\nspeed: %0.0fkm/s", fps, camera_speed * speed_to_screen, max_speed, camera_position, camera_x, find_segment_i(camera_position), stars_count);
     info_panel.setString(info_text);
     window->draw(info_panel);
 }
@@ -258,6 +372,13 @@ void Game::update_cars(float dt) {
     }
 }
 
+void Game::add_star() {
+    if (stars_count == 5) {
+        *result_ptr = 1;
+    }
+    stars_count = std::min(stars_count + 1, 5);
+}
+
 void Game::process_collisions() {
     Segment& s = segments[find_segment_i(player.position)];
 
@@ -269,6 +390,7 @@ void Game::process_collisions() {
 
             if (overlap(player.x * s.screen.z, player_w, c->x * s.screen.z, car_w, 1)) {
                 player.speed = camera_speed = 25;
+                add_star();
             }
         }
     }
@@ -277,6 +399,8 @@ void Game::process_collisions() {
         if (sprite_w)
         if (overlap(player.x * s.screen.z, player_w, s.sprite_x * s.screen.z, sprite_w, 1)) {
             player.speed = camera_speed = 25;
+            if (!dont_change_pos)
+                add_star();
             dont_change_pos = true;
         }
         else {
@@ -314,7 +438,7 @@ void Game::process_speed_limit() {
     if (segments[find_segment_i(player.position)].speed_limit * 1.2 <= camera_speed) {
         auto found_ptr = std::lower_bound(map.begin(), map.end(), find_segment_i(player.position) + 1, [](MapSegment& a, int d) -> bool { return a.length_prefix < d; });
         if (!found_ptr->speed_limit_failed) {
-            stars_count = std::min(stars_count + 1, 5);
+            add_star();
             found_ptr->speed_limit_failed = true;
         }
     }
@@ -328,9 +452,15 @@ void Game::update(float dt) {
     process_speed_limit();
 }
 
+void Game::process_won() {
+    if (find_segment_i(camera_position + 5 * segment_length) <= 4) {
+        *result_ptr = 2;
+    }
+}
+
 void Game::render_player() {
     player.x = camera_x / road_width;
-    player.position = camera_position + segment_length * 6;
+    player.position = camera_position + segment_length * 11;
 
     int start_segment_i = find_segment_i(player.position);
     Segment& s1 = segments[start_segment_i];
@@ -425,7 +555,7 @@ void Game::render(sf::Event event) {
     for (int i = start_segment_i + draw_distance; i > start_segment_i; i--) {
         Segment& s1 = segments[i % segments_buffer_size];
 
-        draw_sprite(*window, s1.sprite, s1, s1, i * segment_length, s1.sprite_x, car_scale, false);
+        draw_sprite(*window, s1.sprite, s1, s1, i * segment_length, s1.sprite_x, car_scale, s1.sprite_x < 0);
 
         if (start_segment_i + 1 == i || start_segment_i == i) continue;
         if ((i + 1) % segments_buffer_size == 0 || (i + 1) == (start_segment_i + draw_distance)) continue;

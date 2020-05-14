@@ -70,3 +70,8 @@ float get_lane_x(int lane_i) {
     lane_i %= total_lanes;
     return 2.0 / total_lanes * lane_i + 1.0 / total_lanes - 1.0;
 }
+
+float pbend(float t) {
+    float sqt = t * t;
+    return sqt / (2.0f * (sqt - t) + 1.0f);
+}

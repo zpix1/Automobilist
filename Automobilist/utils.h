@@ -23,13 +23,13 @@ const sf::Color grass2_color = sf::Color(0, 154, 0);
 const sf::Color lane_color = sf::Color(255, 255, 255);
 
 const float road_width = 3000.0;
-const float segment_length = 400.0;
+const float segment_length = 300.0;
 const float rumble_width_k = 1.05;
 const float lane_width_k = 0.03;
 const float camera_height_offset = 2500.0;
-const float camera_depth = 0.84;
+const float camera_depth = 0.94;
 
-const float max_x_speed = 3500;
+const float max_x_speed = 4500;
 const float max_speed = 500;
 const float max_car_speed = 400;
 const float acceleration_value = max_speed / 10;
@@ -50,7 +50,7 @@ const int total_cars = 50;
 const int total_lanes = 3;
 
 const int segments_buffer_size = 6150;
-const int draw_distance = 300;
+const int draw_distance = 500;
 
 const float speed_to_screen = 0.25;
 
@@ -72,3 +72,6 @@ int find_segment_i(float position);
 float get_segment_percent(float position);
 
 float get_lane_x(int lane_i);
+
+// t is from 0 to 1
+float pbend(float t);
