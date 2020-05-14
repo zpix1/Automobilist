@@ -45,7 +45,7 @@ const float car_scale = player_scale;
 
 const float scale_to_car_k = 3000.0;
 
-const int total_cars = 400;
+const int total_cars = 50;
 
 const int total_lanes = 3;
 

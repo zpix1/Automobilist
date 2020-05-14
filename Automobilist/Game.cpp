@@ -39,10 +39,16 @@ void Game::fill_segments() {
     //              length  length_p speed_l    sign         curve    failed (false)
     map.push_back({ 50,     50,       INFINITY,  "xsign",     4.5,     false });
     map.push_back({ 300,    350,      60,        "60sign",    0.5,     false });
-    map.push_back({ 600,    950,     INFINITY,  "xsign",     0,       false });
+    map.push_back({ 600,    950,     INFINITY,  "xsign",     0.7,       false });
     map.push_back({ 300,    1250,     60,        "60sign",    -3.0,    false });
     map.push_back({ 600,    1850,    120,       "120sign",   -4,      false });
     map.push_back({ 200,    2050,    20,        "20sign",    -0.3,    false });
+
+    int acc = 0;
+    for (int i = 0; i < map.size(); i++) {
+        acc += map[i].length;
+        map[i].length_prefix = acc;
+    }
 
     for (int i = 0; i < map.size(); i++) {
         map[i].length *= length_k;
@@ -61,47 +67,6 @@ void Game::fill_segments() {
             segments.push_back(segment);
         }
     }
-
-
-
-    //for (int i = 0; i < segments_buffer_size; i++) {
-    //    Segment segment;
-
-    //    segment.world.z = i * segment_length;
-    //    int k = 3;
-    //    // length, speed limit, sign texture id, curve
-    //    
-
-    //    //// Add hills
-    //    //if (i > 0) {
-    //    //    segment.world.y = sin((i) / 30.0) * 1500;
-    //    //}
-    //    //// Add curves
-    //    //switch ((i / 300) % 3) {
-    //    //    case 0:
-    //    //        segment.curve = 3.0;
-    //    //        break;
-    //    //    case 1:
-    //    //        segment.curve = 3.0;
-    //    //        break;
-    //    //    case 2:
-    //    //        segment.curve = -5.7;
-    //    //        break;
-    //    //}
-    //    //// Add sprites
-    //    //if (i % 10 == 0) {
-    //    //    segment.sprite_x = 1.0;
-    //    //    segment.sprite.setTexture(textures[2]);
-    //    //}
-
-    //    /*if (i == 100) {
-    //        segment.sprite_x = 1.5;
-    //        segment.sprite.setTexture(textures[0]);
-    //    }*/
-
-    //    segments.push_back(segment);
-    //}
-    //segments_buffer_size = segments.size();
 }
 
 void Game::reset_cars() {
@@ -141,7 +106,7 @@ void Game::render_info() {
     info_panel.setPosition(0, 0);
     info_panel.setFont(main_font);
     char info_text[200];
-    sprintf_s(info_text, "%.1f\nspeed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f\nsegment_i(cam): %d", fps, camera_speed * speed_to_screen, max_speed, camera_position, camera_x, find_segment_i(camera_position));
+    sprintf_s(info_text, "%.1f\nspeed: %0.1fkm/s / %f\nposition: %0.1f\npx: %f\nsegment_i(cam): %d\nsc: %d\n", fps, camera_speed * speed_to_screen, max_speed, camera_position, camera_x, find_segment_i(camera_position), stars_count);
     info_panel.setString(info_text);
     window->draw(info_panel);
 }
@@ -347,8 +312,7 @@ void Game::process_overtake(Car& car) {
 
 void Game::process_speed_limit() {
     if (segments[find_segment_i(player.position)].speed_limit * 1.2 <= camera_speed) {
-        auto found_ptr = std::lower_bound(map.begin(), map.end(), find_segment_i(player.position), [](MapSegment& a, int d) -> bool { return a.length_prefix < d; });
-        printf("dd= %d\n", found_ptr - map.begin());
+        auto found_ptr = std::lower_bound(map.begin(), map.end(), find_segment_i(player.position) + 1, [](MapSegment& a, int d) -> bool { return a.length_prefix < d; });
         if (!found_ptr->speed_limit_failed) {
             stars_count = std::min(stars_count + 1, 5);
             found_ptr->speed_limit_failed = true;
