@@ -12,11 +12,11 @@ void Game::render_start_info() {
     info_panel.setFont(main_font);
     char info_text[] = \
         "Welcome to Automobilist!\n"
-        "It is your last chance to pass a driving exam\n"
-        "if you fail it this time\nyou will never get a driver license again\n"
-        "Pull yourself together, you hear me??\n\n"
-        "You have to get it done in 5 minutes\n  and with no more than 5 errors (stars)\n"
-        "Press space to continue, good luck!";
+        "It is your last chance to pass a driving exam!\n"
+        "If you fail it this time\nyou will never get a driver license again...\n"
+        "Pull yourself together, you hear me??\n\nUse arrow keys to control the car.\n"
+        "You have to get it done in 5 minutes\n  and with no more than 5 errors (stars).\n\n"
+        "Press space to continue,\n good luck!";
     info_panel.setString(info_text);
     window->draw(info_panel);
     window->display();
