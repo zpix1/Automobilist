@@ -59,7 +59,8 @@ void Game::load_textures() {
         "bluecar", "palm", "20sign", "60sign", "70sign", "120sign", "xsign", "sky",
         "0stars", "1stars", "2stars", "3stars", "4stars", "5stars",
         "1car", "2car", "3car", "4car",
-        "wall", "cactus", "palm_tree"
+        "wall", "cactus", "palm_tree",
+        "nsu1b", "nsu2b"
     };
     for (int i = 0; i < tnames.size(); i++) {
         TextureT temp_texture;
@@ -87,12 +88,12 @@ sf::Texture& Game::get_texture(std::string name) {
 
 void Game::fill_segments() {
     const int length_k = 3;
-    //              length  length_p speed_l    sign          curve     height  failed (false)  tm          tf
+    //              length  length_p speed_l    sign          curve     height  failed (false)  tm          tf (odd)
     map.push_back({ 50,     50,      INFINITY,  "xsign",      4.5,      100,    false,           "",        11  });
     map.push_back({ 300,    350,     60,        "60sign",     0.5,      200,    false,          "palm",     15  });
     map.push_back({ 600,    950,     INFINITY,  "xsign",      0.7,      0,      false,          "cactus",   31  });
     map.push_back({ 300,    1250,    60,        "60sign",     2.0,      200,    false,          "palm_tree",21  });
-    map.push_back({ 600,    1850,    120,       "120sign",   -1,        150,    false,           "",        10  });
+    map.push_back({ 600,    1850,    120,       "120sign",   -1,        150,    false,          "palm",     41  });
     map.push_back({ 200,    2050,    20,        "20sign",    -4,        0,      false,          "wall",     3   });
     
     std::vector< std::pair<int, float> > heights;
@@ -160,6 +161,14 @@ void Game::fill_segments() {
             if (j == 0) {
                 segment.sprite_x = 1.5;
                 segment.sprite.setTexture(get_texture(map[i].sign_name));
+            }
+            else if (global_i == 645) {
+                segment.sprite_x = 1.5;
+                segment.sprite.setTexture(get_texture("nsu1b"));
+            }
+            else if (global_i == 5330) {
+                segment.sprite_x = 1.5;
+                segment.sprite.setTexture(get_texture("nsu2b"));
             }
             else if (map[i].texture_name.size() != 0 && global_i % map[i].texture_freq == 0) {
                 if (global_i % 2 == 0) {
@@ -337,6 +346,9 @@ void Game::update_cars(float dt) {
         Segment& s2 = *car_segment_ptr;
         
         // To avoid collisions
+        if (find_segment_i(c->position) == find_segment_i(player.position)) {
+            s2.cars.push_back(std::make_shared<Car>(player));
+        }
         for (auto near_car : s2.cars) {
             if (near_car != c && near_car->speed < c->speed && c->position <= near_car->position && overlap(c->x * s2.screen.z, c->sprite.getTextureRect().width, near_car->x * s2.screen.z, near_car->sprite.getTextureRect().width, 1)) {
                 bool found = false;
@@ -354,6 +366,9 @@ void Game::update_cars(float dt) {
                     c->speed = near_car->speed * 0.8;
                 }
             }
+        }
+        if (find_segment_i(c->position) == find_segment_i(player.position)) {
+            s2.cars.pop_back();
         }
 
         // To respect speed limits
