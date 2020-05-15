@@ -2,7 +2,7 @@
 
 #include "Game.h"
 
-int main() {
+int WinMain() {
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
     
